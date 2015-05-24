@@ -21,23 +21,20 @@
 Rcpp::List int_eprior(const Eigen::MatrixXd & sx, const Eigen::VectorXd & ghat, const Eigen::VectorXd & dhat){
   int r = sx.rows(), c = sx.cols();
 
-  //Eigen::initParallel();
-  //Eigen::setNbThreads(OMP_NUM_THREADS);
   Eigen::VectorXd gstar = Eigen::VectorXd::Zero(r);
   Eigen::VectorXd dstar = Eigen::VectorXd::Zero(r);
-  Eigen::MatrixXd I     = Eigen::VectorXd::Ones(c);
 
-  #pragma omp parallel for num_threads(OMP_NUM_THREADS)
+  #pragma omp parallel for schedule(dynamic, 32) num_threads(OMP_NUM_THREADS)
   for(int i = 0; i < r; i++){
     Eigen::MatrixXd dat  = Eigen::MatrixXd::Zero(r, c);
     dat.rowwise()        = sx.row(i);
     dat.colwise()       -= ghat;
-    dat                  = (dat.array() * dat.array()).matrix();
-    Eigen::MatrixXd sum2 = dat * I;
+    dat                  = dat.array().square();
+    Eigen::MatrixXd sum2 = dat.rowwise().sum();     // dat %*% I
     Eigen::MatrixXd LH   = 1.0 /  (sqrt(pow(2 * M_PI, c)) * dhat.array().pow(c/2.0)) * \
                            (-1 * (sum2.array() / (2 * dhat.array()))).exp();
-    Eigen::MatrixXd gLH  = (LH.array() * ghat.array()).matrix();
-    Eigen::MatrixXd dLH  = (LH.array() * dhat.array()).matrix();
+    Eigen::MatrixXd gLH  = LH.array() * ghat.array();
+    Eigen::MatrixXd dLH  = LH.array() * dhat.array();
     gstar(i)             = (gLH.sum() - gLH(i)) / (LH.sum() - LH(i));
     dstar(i)             = (dLH.sum() - dLH(i)) / (LH.sum() - LH(i));
   }
