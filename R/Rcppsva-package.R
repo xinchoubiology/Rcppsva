@@ -27,6 +27,7 @@
 ##' @aliases Rcppsva package-Rcppsva
 ##' @useDynLib Rcppsva
 ##' @import Rcpp RcppEigen methods
+##' @author Xin Zhou \url{xinchoubiology@@gmail.com}
 NULL
 
 

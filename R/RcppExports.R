@@ -11,6 +11,7 @@
 #' @return list
 #'         g.star
 #'         d.star
+#' @author Xin Zhou \url{xinchoubiology@@gmail.com}
 int_eprior <- function(sx, ghat, dhat) {
     .Call('Rcppsva_int_eprior', PACKAGE = 'Rcppsva', sx, ghat, dhat)
 }

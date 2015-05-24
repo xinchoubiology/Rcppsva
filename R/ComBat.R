@@ -1,4 +1,4 @@
-##' Adjust for batch effects using an empirical Bayes framework
+##' Adjust for batch effects using an empirical Bayesian or parameter frameworks
 ##'
 ##' ComBat allows users to adjust for batch effects in datasets where the batch covariate is known, using methodology
 ##' described in Johnson et al. 2007. It uses either parametric or non-parametric empirical Bayes frameworks for adjusting data for

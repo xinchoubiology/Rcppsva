@@ -16,6 +16,7 @@
 //' @return list
 //'         g.star
 //'         d.star
+//' @author Xin Zhou \url{xinchoubiology@@gmail.com}
 // [[Rcpp::export]]
 Rcpp::List int_eprior(const Eigen::MatrixXd & sx, const Eigen::VectorXd & ghat, const Eigen::VectorXd & dhat){
   int r = sx.rows(), c = sx.cols();

@@ -1,3 +1,4 @@
 cd src
 rm *.o
 rm *.so
+rm *.dll
