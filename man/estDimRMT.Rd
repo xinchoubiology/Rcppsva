@@ -4,10 +4,10 @@
 \alias{estDimRMT}
 \title{estDimRMT}
 \usage{
-estDimRMT(mat, plot = TRUE)
+estDimRMT(dat.m, plot = TRUE)
 }
 \arguments{
-\item{mat}{n x m M|beta matrix for n CpG sites across m different patient samples.}
+\item{dat.m}{n x m M|beta matrix for n CpG sites across m different patient samples.}
 
 \item{plot}{Optional bool value, plot eigenvalue distribution or not. Default = TRUE}
 }

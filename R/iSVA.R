@@ -142,7 +142,7 @@ isvaFn <- function(dat.m = NULL, pheno = NULL, type = c("M", "beta"), qcutoff = 
 ##' @param backend backend regression packages; Default = "NULL", switch to limma for moderate statistic
 ##' @param verbose Optional; Default FALSE
 ##' @importFrom limma lmFit eBayes
-##' @impertFrom qvalue qvalue
+##' @importFrom qvalue qvalue
 ##' @return res data.frame
 ##' @export
 ##' @author Xin Zhou \url{xinchoubiology@@gmail.com}
