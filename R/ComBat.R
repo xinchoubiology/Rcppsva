@@ -12,7 +12,8 @@
 ##' @param par.prior (Optional) TRUE indicates parametric adjustments will be used, FALSE indicates non-parametric adjustments will be used
 ##' @param prior.plots (Optional)TRUE give prior plots with black as a kernel estimate of the empirical batch effect density and red as the parametric
 ##' @importFrom genefilter rowVars
-##' @return data A probe x sample genomic measure matrix, adjusted for batch effects.
+##' @return data :
+##'         A probe x sample genomic measure matrix, adjusted for batch effects.
 ##' @export
 ##' @author Xin Zhou \url{xinchoubiology@@gmail.com}
 
