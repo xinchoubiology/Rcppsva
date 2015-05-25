@@ -138,14 +138,15 @@ isvaFn <- function(dat.m = NULL, pheno = NULL, type = c("M", "beta"), qcutoff = 
 ##' @param dat.m n x m M|beta matrix for n CpG sites across m different patient samples.
 ##' @param pheno phenotype of interested; m-length vector reresent patient samples' phenotype.
 ##' @param sv.m  surrogate variables matrix calculate from \Rfunction{isvaFn} other sva methods.
-##' @param qvalue false discovery rate's threshold; Default = 0.1
+##' @param qvalue0 false discovery rate's threshold; Default = 0.1
 ##' @param backend backend regression packages; Default = "NULL", switch to limma for moderate statistic
+##' @param verbose Optional; Default FALSE
 ##' @importFrom limma lmFit eBayes
 ##' @impertFrom qvalue qvalue
 ##' @return res data.frame
 ##' @export
 ##' @author Xin Zhou \url{xinchoubiology@@gmail.com}
-svaReg <- function(dat.m = NULL, pheno = NULL, sv.m = NULL, qvalue = 0.1, backend = c("NULL", "limma")){
+svaReg <- function(dat.m = NULL, pheno = NULL, sv.m = NULL, qvalue0 = 0.1, backend = c("NULL", "limma"), verbose = FALSE){
   backend <- match.arg(backend)
   
   pheno <- as.factor(pheno)
@@ -153,6 +154,23 @@ svaReg <- function(dat.m = NULL, pheno = NULL, sv.m = NULL, qvalue = 0.1, backen
   modelNull <- model.matrix(~ sv.m)
   
   if(backend == "NULL"){
-    
+    pval   <- pvalue(dat.m, modelSv, modelNull)
+    pval.s <- sort(pval, decreasing = FALSE, return.index = TRUE)
+    qval   <- qvalue(pval.s$x)$qvalue
+    nsig   <- length(which(qval < qvalue0))
+    df     <- ncol(dat.m) - ncol(modelSv)
+    if(nsig > 0){
+      p.index <- pval.s$ix[1:nsig]
+      tmp.lm  <- lm(t(dat.m) ~ modelSv - 1)
+      tstats  <- sapply(summary(tmp.lm), function(x) x$coefficients[2,3])
+      tpval   <- sapply(summary(tmp.lm), function(x) x$coefficients[2,4])
+      res     <- cbind(tstats, tpval, pval.s$x[1:nsig], qval[1:nsig])
+      colnames(res) <- c("t-stats", "t-pvalue", "f-pvalue", "fdr")
+      rownames(res) <- rownames(dat.m)[p.index]
+    }
+    else{
+      res <- NULL
+    }
+    return(res)
   }
 }

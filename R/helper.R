@@ -56,44 +56,24 @@ int.eprior <- function(sdat,g.hat,d.hat){
 ##' @param dat.m data matrix for expression/methylation microarray
 ##' @param mod the model being used to fit the data
 ##' @param mod0 the null hypothesis model being compared when fitting the data
-##' @param qval0 threshold of qvalue
 ##' @param verbose Optional; Default FALSE
 ##' @return p vector of F-statistic p-values for each row of dat
 ##' @export
 ##' @author Xin Zhou
-pvalue <- function(dat.m = NULL, mod = NULL, mod0 = NULL, qval0 = 0.1, verbose = FALSE){
-  df  <- ncol(dat.m) - dim(mod)[2] + 1
-  df0 <- ncol(dat.m) - dim(mod0)[2] + 1
-  p   <- rep(0, nrow(dat.m))
-  res <- dat.m - dat.m %*% mod %*% tcrossprod(solve(crossprod(mod)), mod)
-  rss <- rowSums(res * res)
-  rm(res)
+pvalue <- function(dat.m = NULL, mod = NULL, mod0 = NULL, ...){
+  df1 <- ncol(dat.m) - dim(mod)[2]
+  df0 <- ncol(dat.m) - dim(mod0)[2]
+  Id <- diag(ncol(dat.m))
   
-  res0 <- dat.m - dat.m %*% mod0 %*% tcrossprod(solve(crossprod(mod0)), mod0)
-  rss0 <- rowSums(res0 * res0)
-  rm(res0)
+  ## resid <- dat.m %*% (Id - mod %*% solve(t(mod) %*% mod) %*% t(mod))
+  resid <- dat.m - dat.m %*% mod %*% tcrossprod(solve(crossprod(mod)), mod)
+  rss1  <- rowSums(resid*resid)
   
-  f.stats <- (rss0 - rss) / (df0 - df) / rss / df
-  pv.v    <- 1 - pf(f.stats, df1 = df0 - df, df2 = df)
-  pv.s    <- sort(pv.v, decreasing = FALSE, index.return = TRUE)
-  qv.v    <- qvalue(pv.s$x)$qvalue
-  nsig    <- length(which(qv.v < qvalue0))
-  if(verbose){
-    cat(sprintf("%d CpG sites are significante differential in cancer ...\n", nsig))
-  }
-  if(nsig > 0){
-    pred.idx <- pv.s$ix[1:nsig]
-    lm.o     <- lm(t(dat.m) ~ mod - 1)
-    t.stats  <- sapply(summary(lm.o), function(x) x$coefficients[2,3])
-    res      <- cbind(t.stats, pv.s[1:nsig], qv.v[1:nsig])
-    colnames(res) <- c("t-stat", "fpval", "qval")
-    rownames(res) <- rownames(dat.m)[pred.idx]
-  }
-  else{
-    res <- NULL
-  }
+  resid0 <- dat.m - dat.m %*% mod0 %*% tcrossprod(solve(crossprod(mod0)), mod0)
+  rss0   <- rowSums(resid0*resid0)
   
-  res
+  fstats <- ((rss0 - rss1)/(df0-df1))/(rss1 / df1)
+  p <- 1 - pf(fstats, df1 = (df0-df1), df2 = df0)
 }
 
 
