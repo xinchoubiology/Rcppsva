@@ -3,7 +3,8 @@
 ##' ComBat allows users to adjust for batch effects in datasets where the batch covariate is known, using methodology
 ##' described in Johnson et al. 2007. It uses either parametric or non-parametric empirical Bayes frameworks for adjusting data for
 ##' batch effects.  Users are returned an expression matrix that has been corrected for batch effects. The input
-##' data are assumed to be cleaned and normalized before batch effect removal.
+##' data are assumed to be cleaned and normalized before batch effect removal.[[Cpp Rewrite and we finally get 100x speedup]]
+##' (For 485512 x 6 expression array matrix = 9622.983 secs = 2 hrs 40 mins)
 ##'
 ##' @param dat Genomic measure matrix (dimensions probe x sample) - for example, expression matrix
 ##' @param batch {Batch covariate (only one batch allowed)}
