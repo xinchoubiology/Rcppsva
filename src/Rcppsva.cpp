@@ -1,9 +1,11 @@
+#include <RcppArmadillo.h>
 #include <RcppEigen.h>
 #include <math.h>
 #include <omp.h>
 
 #define OMP_NUM_THREADS omp_get_max_threads()
 
+// [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::depends(RcppEigen)]]
 
 //' Integrating empirical bayesian prior function
@@ -40,4 +42,15 @@ Rcpp::List int_eprior(const Eigen::MatrixXd & sx, const Eigen::VectorXd & ghat, 
   }
   return Rcpp::List::create(Rcpp::Named("g.star") = gstar,
                             Rcpp::Named("d.star") = dstar);
+}
+
+//' SVD calculation for X=UΣV, use XtX=VtΣV to calculate the right eigen vector
+//' @title arma_eigen
+//' @param M input matrix = XtX
+//' @return v eigen vector
+//' @export
+//' @author Xin Zhou \url{xinchoubiology@@gmail.com}
+//  [[Rcpp::export]]
+arma::vec arma_eigen(const arma::mat & M){
+  return arma::eig_sym(M);
 }

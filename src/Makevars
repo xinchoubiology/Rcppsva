@@ -1,3 +1,3 @@
 PKG_CXXFLAGS = -fopenmp -msse2
-PKG_LIBS = $(shell $(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()") -fopenmp -msse2
+PKG_LIBS = $(shell $(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()") $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS) -fopenmp -msse2
 

@@ -22,4 +22,7 @@ list
 Integrating empirical bayesian prior function
 by Monte Carlo integration
 }
+\author{
+Xin Zhou \url{xinchoubiology@gmail.com}
+}
 

@@ -16,3 +16,13 @@ int_eprior <- function(sx, ghat, dhat) {
     .Call('Rcppsva_int_eprior', PACKAGE = 'Rcppsva', sx, ghat, dhat)
 }
 
+#' SVD calculation for X=UΣV, use XtX=VtΣV to calculate the right eigen vector
+#' @title arma_eigen
+#' @param M input matrix = XtX
+#' @return v eigen vector
+#' @export
+#' @author Xin Zhou \url{xinchoubiology@@gmail.com}
+arma_eigen <- function(M) {
+    .Call('Rcppsva_arma_eigen', PACKAGE = 'Rcppsva', M)
+}
+

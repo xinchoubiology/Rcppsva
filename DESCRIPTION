@@ -29,13 +29,13 @@ Date: 2015-05-23
 Maintainer: Xin Zhou <xinchoubiology@gmail.com>
 License: Artistic-2.0
 LazyData: TRUE
-Depends: R (>= 2.8), mgcv, genefilter
+Depends: R (>= 2.8), mgcv, genefilter, fastICA, qvalue, limma
 Suggests: limma, pamr, bladderbatch, BiocStyle, zebrafishRNASeq,
           testthat
 Imports:
     Rcpp (>= 0.11.6), RcppEigen (>= 0.3.2.4.0), methods
 LinkingTo:
-    Rcpp, RcppEigen
+    Rcpp, RcppArmadillo, RcppEigen
 biocViews: Microarray, StatisticalMethod, Preprocessing,
         MultipleComparison, Sequencing, RNASeq, BatchEffect,
         Normalization

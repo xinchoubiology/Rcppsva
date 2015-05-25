@@ -28,4 +28,7 @@ dependence, stabilize error rate estimates, and improve
 reproducibility, see (Leek and Storey 2007 PLoS Genetics, 2008
 PNAS or Leek et al. 2011 Nat. Reviews Genetics).
 }
+\author{
+Xin Zhou \url{xinchoubiology@gmail.com}
+}
 
