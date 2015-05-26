@@ -72,8 +72,9 @@ pvalue <- function(dat.m = NULL, mod = NULL, mod0 = NULL, ...){
   resid0 <- dat.m - dat.m %*% mod0 %*% tcrossprod(solve(crossprod(mod0)), mod0)
   rss0   <- rowSums(resid0*resid0)
   
-  fstats <- ((rss0 - rss1)/(df0-df1))/(rss1 / df1)
-  p <- 1 - pf(fstats, df1 = (df0-df1), df2 = df0)
+  fstats <- ((rss0 - rss1)/(df0 - df1))/(rss1 / df1)
+  p <- 1 - pf(fstats, df1 = (df0 - df1), df2 = df1)
+  p
 }
 
 

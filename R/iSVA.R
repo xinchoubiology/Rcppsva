@@ -137,7 +137,7 @@ isvaFn <- function(dat.m = NULL, pheno = NULL, type = c("M", "beta"), qcutoff = 
 ##'              update our model.matrix and calculate moderate test
 ##' @param dat.m n x m M|beta matrix for n CpG sites across m different patient samples.
 ##' @param pheno phenotype of interested; m-length vector reresent patient samples' phenotype.
-##' @param sv.m  surrogate variables matrix calculate from \Rfunction{isvaFn} other sva methods.
+##' @param sv.m  surrogate variables matrix calculate from \link{isvaFn} other sva methods.
 ##' @param qvalue0 false discovery rate's threshold; Default = 0.1
 ##' @param backend backend regression packages; Default = "NULL", switch to limma for moderate statistic
 ##' @param verbose Optional; Default FALSE
@@ -155,22 +155,26 @@ svaReg <- function(dat.m = NULL, pheno = NULL, sv.m = NULL, qvalue0 = 0.1, backe
   
   if(backend == "NULL"){
     pval   <- pvalue(dat.m, modelSv, modelNull)
-    pval.s <- sort(pval, decreasing = FALSE, return.index = TRUE)
+    pval.s <- sort(pval, decreasing = FALSE, index.return = TRUE)
     qval   <- qvalue(pval.s$x)$qvalue
     nsig   <- length(which(qval < qvalue0))
-    df     <- ncol(dat.m) - ncol(modelSv)
+    df     <- ncol(dat.m) - ncol(modelSv) + 1
+    cat(sprintf("Numeber DMP = %d \n", nsig))
     if(nsig > 0){
       p.index <- pval.s$ix[1:nsig]
-      tmp.lm  <- lm(t(dat.m) ~ modelSv - 1)
+      tmp.lm  <- lm(t(dat.m[p.index,]) ~ modelSv - 1)
+      coef    <- sapply(summary(tmp.lm), function(x) x$coefficients[2,1])
       tstats  <- sapply(summary(tmp.lm), function(x) x$coefficients[2,3])
-      tpval   <- sapply(summary(tmp.lm), function(x) x$coefficients[2,4])
-      res     <- cbind(tstats, tpval, pval.s$x[1:nsig], qval[1:nsig])
-      colnames(res) <- c("t-stats", "t-pvalue", "f-pvalue", "fdr")
-      rownames(res) <- rownames(dat.m)[p.index]
+      res     <- cbind(coef, tstats, pval[p.index], qval[1:nsig])
+      colnames(res) <- c("coef-estimate", "t-stats", "f-pvalue", "fdr")
+      rownames(res) <- rownames(dat.m[p.index,])
     }
     else{
       res <- NULL
     }
     return(res)
+  }
+  else if(backend == "limma"){
+    
   }
 }

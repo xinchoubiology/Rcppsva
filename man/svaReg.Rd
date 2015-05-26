@@ -12,7 +12,7 @@ svaReg(dat.m = NULL, pheno = NULL, sv.m = NULL, qvalue0 = 0.1,
 
 \item{pheno}{phenotype of interested; m-length vector reresent patient samples' phenotype.}
 
-\item{sv.m}{surrogate variables matrix calculate from \Rfunction{isvaFn} other sva methods.}
+\item{sv.m}{surrogate variables matrix calculate from \link{isvaFn} other sva methods.}
 
 \item{qvalue0}{false discovery rate's threshold; Default = 0.1}
 
