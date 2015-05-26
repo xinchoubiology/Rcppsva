@@ -153,21 +153,24 @@ svaReg <- function(dat.m = NULL, pheno = NULL, sv.m = NULL, qvalue0 = 0.1, backe
   modelSv <- model.matrix(~ pheno + sv.m)
   modelNull <- model.matrix(~ sv.m)
   
-  pval   <- pvalue(dat.m, modelSv, modelNull)
-  pval.s <- sort(pval, decreasing = FALSE, index.return = TRUE)
-  qval   <- qvalue(pval.s$x)$qvalue
-  nsig   <- length(which(qval < qvalue0))
-  df     <- ncol(dat.m) - ncol(modelSv) + 1
-  cat(sprintf("Numeber DMP = %d \n", nsig))
   
   if(backend == "NULL"){
+    pval   <- pvalue(dat.m, modelSv, modelNull)
+    pval.s <- sort(pval, decreasing = FALSE, index.return = TRUE)
+    qval   <- qvalue(pval.s$x)$qvalue
+    nsig   <- length(which(qval < qvalue0))
+    df     <- ncol(dat.m) - ncol(modelSv) + 1
+    cat(sprintf("Numeber DMP = %d \n", nsig))
     if(nsig > 0){
-      p.index <- pval.s$ix[1:nsig]
+      ## p.index <- pval.s$ix[1:nsig]
+      p.index <- pval.s$ix
       tmp.lm  <- lm(t(dat.m[p.index,]) ~ modelSv)
       lm.stat <- do.call(rbind, lapply(summary(tmp.lm), function(x) x$coefficients[2,c(1,3)]))
-      res     <- cbind(lm.stat, pval[p.index], qval[1:nsig])
+      ## res     <- cbind(lm.stat, pval[p.index], qval[1:nsig])
+      res     <- cbind(lm.stat, pval[p.index], qval)
       colnames(res) <- c("Estimate", "t-stats", "f-pvalue", "fdr")
       rownames(res) <- rownames(dat.m[p.index,])
+      res <- list(siggene = res[1:nsig,], null = res[(nsig+1):nrow(dat.m),])
     }
     else{
       res <- NULL
@@ -175,20 +178,17 @@ svaReg <- function(dat.m = NULL, pheno = NULL, sv.m = NULL, qvalue0 = 0.1, backe
     return(res)
   }
   else if(backend == "limma"){
-    if(nsig > 0){
-      p.index <- pval.s$ix[1:nsig]
-      ## if we use the stringent statistic test, we only get 3 significant CpG sites
-      fit  <- lmFit(dat.m[p.index,], modelSv)
+      fit  <- lmFit(dat.m, modelSv)
       nsv  <- ncol(sv.m)
       contrast.matrix <- cbind("cancer-normal" = c(0, 1, rep(0, nsv)))
       fitc <- contrasts.fit(fit,contrast.matrix)
       fitc <- eBayes(fitc)
-      res  <- topTableF(fitc, number = nsig)
-      res$qval <- qvalue(res$P.Value)$qvalue
-    }
-    else{
-      res <- NULL
-    }
-    return(res)
+      ## res  <- topTableF(fitc, number = nsig)
+      res  <- topTableF(fitc, number = nrow(dat.m))
+      qval <- qvalue(res$P.Value)$qvalue
+      nsig <- length(which(qval < qvalue0))
+      cat(sprintf("Numeber DMP = %d \n", nsig))
+      res  <- list(siggene = res[1:nsig,], null = res[(nsig+1):nrow(dat.m),])
+      return(res)
   }
 }
