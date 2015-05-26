@@ -54,3 +54,7 @@ Rcpp::List int_eprior(const Eigen::MatrixXd & sx, const Eigen::VectorXd & ghat, 
 arma::vec arma_eigen(const arma::mat & M){
   return arma::eig_sym(M);
 }
+
+//' solve linear regression
+//' @title cauchy_gauss
+//' @param 
