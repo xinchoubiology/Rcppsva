@@ -184,7 +184,7 @@ svaReg <- function(dat.m = NULL, pheno = NULL, sv.m = NULL, qvalue0 = 0.1, backe
       fitc <- contrasts.fit(fit,contrast.matrix)
       fitc <- eBayes(fitc)
       res  <- topTableF(fitc, number = nsig)
-      res$qval <- qvalue(resm$P.Value)$qvalue
+      res$qval <- qvalue(res$P.Value)$qvalue
     }
     else{
       res <- NULL
