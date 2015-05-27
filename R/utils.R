@@ -99,7 +99,8 @@ pvalue <- function(dat.m = NULL, mod = NULL, mod0 = NULL, ...){
 ##' pheno <- factor(c(0,0,0,1,1,1))
 ##' levels(pheno) <- c("normal", "cancer")
 ##' design <- model.matrix(~pheno)
-##' fit <- lmFit(y, design)
+##' fit <- mlm.fit(y, design)
+##' sig.tab <- mlm.tstat(fit)
 mlm.fit <- function(dat.m = NULL, design = NULL, coef = 2){
   
 }

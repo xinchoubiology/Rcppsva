@@ -1,18 +1,17 @@
+##' Class "bumps"
+##' The class contains information of methyaltion differential related region
+##' 
+##' @name bumps-class
+##' @docType class
+##' @slot table statistic table of CpG regions
+##' @slot null list of null distribution (H0: no differential methylation)
+##' @slot algorithm "get.bumps" algorithm's argumrnts
+##' @exportClass bumps
+##' @keywords classes
 setClass("bumps",
          representation(table     = "data.frame",
-                        coef      = "numeric",
-                        fitted    = "numeric",
-                        pvalue    = "numeric",
                         null      = "list",
                         algorithm = "list"))
 
-setMethod("print", signature(x = "bumps"),
-          function(x, ...){
-            cat(sprintf("'bumps' object with %d bumps\n", ncol(x@table)))
-            cat(sprintf("algorithms : ...... \n"))
-            for(params in names(x@algorithm)){
-              cat(sprintf("\t%s = %s \n", params, x@algorithm[[params]]))
-            }
-          })
                         
                         
