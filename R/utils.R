@@ -77,6 +77,31 @@ pvalue <- function(dat.m = NULL, mod = NULL, mod0 = NULL, ...){
   p
 }
 
-
+##' estimate coefficient of interest variables with known Svs, \link{mlm.tstat}
+##' 
+##' @title mlm.fit
+##' @param dat.m n x m matrix of methylation microarray
+##' @param design design matrix for expression data matrix(data.m)
+##' @param coef covariate of interest; Default = 2
+##' @param permutation permutation each row of matrix dat.m's columns
+##' @return list
+##'         coefficient
+##'         stdev_unscale
+##'         sigma
+##'         df.residule
+##' @export
+##' @example
+##' sd <- 0.3 * sqrt(4/rchisq(100, df = 4))
+##' y  <- matrix(rnorm(100*6, sd = sd), 100, 6)  # each row of data is generate by sd[i] ~ invchisq
+##' rownames(y) <- paste("cg", 1:100)
+##' # introduce 2 cgs which are DMPs 
+##' y[1:2, 4:6] <- y[1:2, 4:6] + 2 # have significant differential when we introduce the poi(cancer - normal)
+##' pheno <- factor(c(0,0,0,1,1,1))
+##' levels(pheno) <- c("normal", "cancer")
+##' design <- model.matrix(~pheno)
+##' fit <- lmFit(y, design)
+mlm.fit <- function(dat.m = NULL, design = NULL, coef = 2){
+  
+}
 
 

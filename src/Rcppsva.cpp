@@ -55,6 +55,4 @@ arma::vec arma_eigen(const arma::mat & M){
   return arma::eig_sym(M);
 }
 
-//' solve linear regression
-//' @title cauchy_gauss
-//' @param 
+
