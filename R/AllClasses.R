@@ -1,3 +1,5 @@
+setOldClass("print")
+
 ##' Class "bumps"
 ##' The class contains information of methyaltion differential related region
 ##' 
@@ -7,11 +9,13 @@
 ##' @slot null list of null distribution (H0: no differential methylation)
 ##' @slot algorithm "get.bumps" algorithm's argumrnts
 ##' @exportClass bumps
-##' @keywords classes
+##' @keywords classes 
 setClass("bumps",
-         representation(table     = "data.frame",
-                        null      = "list",
-                        algorithm = "list"))
+         representation = representation(table     = "data.frame",
+                                         null      = "list",
+                                         algorithm = "list")
+)
+
 
                         
                         

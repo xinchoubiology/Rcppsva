@@ -1,3 +1,4 @@
+##' @title print
 ##' @rdname print-methods
 ##' @exportMethod print
 setMethod("print", signature(x = "bumps"),

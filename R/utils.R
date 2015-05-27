@@ -90,7 +90,7 @@ pvalue <- function(dat.m = NULL, mod = NULL, mod0 = NULL, ...){
 ##'         sigma
 ##'         df.residule
 ##' @export
-##' @example
+##' @examples
 ##' sd <- 0.3 * sqrt(4/rchisq(100, df = 4))
 ##' y  <- matrix(rnorm(100*6, sd = sd), 100, 6)  # each row of data is generate by sd[i] ~ invchisq
 ##' rownames(y) <- paste("cg", 1:100)

@@ -9,3 +9,5 @@
 setGeneric("get.bumps", function(object, ...){
   standardGeneric("get.bumps")
 })
+
+
