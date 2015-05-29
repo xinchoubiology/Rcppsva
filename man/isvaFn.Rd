@@ -4,11 +4,13 @@
 \alias{isvaFn}
 \title{isvaFn}
 \usage{
-isvaFn(dat.m = NULL, pheno = NULL, type = c("M", "beta"),
+isvaFn(dat.m = NULL, design = NULL, type = c("M", "beta"),
   qcutoff = 0.05, verbose = FALSE)
 }
 \arguments{
 \item{dat.m}{Data matrix whose rows represent different labeling features and columns stand for the different samples}
+
+\item{design}{design matrix for expression/methylation microarray}
 
 \item{qcutoff}{qvalue's cutoff, control the FDR(false discovery rate)}
 }

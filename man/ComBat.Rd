@@ -26,7 +26,7 @@ ComBat allows users to adjust for batch effects in datasets where the batch cova
 described in Johnson et al. 2007. It uses either parametric or non-parametric empirical Bayes frameworks for adjusting data for
 batch effects.  Users are returned an expression matrix that has been corrected for batch effects. The input
 data are assumed to be cleaned and normalized before batch effect removal.[[Cpp Rewrite and we finally get 100x speedup]]
-(For 485512 x 6 expression array matrix = 9622.983 secs = 2 hrs 40 mins)
+(For 485512 x 6 expression array matrix = 9622.983 secs = 2 hrs 40 mins) and origin source code of pure R version is from minif package
 }
 \author{
 Xin Zhou \url{xinchoubiology@gmail.com}

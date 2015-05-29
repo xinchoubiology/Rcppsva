@@ -83,13 +83,15 @@ pvalue <- function(dat.m = NULL, mod = NULL, mod0 = NULL, ...){
 ##' @param dat.m n x m matrix of methylation microarray
 ##' @param design design matrix for expression data matrix(data.m)
 ##' @param coef covariate of interest; Default = 2
-##' @param permutation permutation each row of matrix dat.m's columns
+##' @param B permutation number of covariates of interest
+##' @param full return full regression object; Optional FALSE
 ##' @return list
 ##'         coefficient
 ##'         stdev_unscale
 ##'         sigma
 ##'         df.residule
 ##' @export
+##' @importFrom doMC registerDoMC
 ##' @examples
 ##' sd <- 0.3 * sqrt(4/rchisq(100, df = 4))
 ##' y  <- matrix(rnorm(100*6, sd = sd), 100, 6)  # each row of data is generate by sd[i] ~ invchisq
@@ -98,11 +100,23 @@ pvalue <- function(dat.m = NULL, mod = NULL, mod0 = NULL, ...){
 ##' y[1:2, 4:6] <- y[1:2, 4:6] + 2 # have significant differential when we introduce the poi(cancer - normal)
 ##' pheno <- factor(c(0,0,0,1,1,1))
 ##' levels(pheno) <- c("normal", "cancer")
-##' design <- model.matrix(~pheno)
+##' design <- model.matrix(~ pheno)
 ##' fit <- mlm.fit(y, design)
 ##' sig.tab <- mlm.tstat(fit)
-mlm.fit <- function(dat.m = NULL, design = NULL, coef = 2){
-  
+##' library(doMC)
+##' registerDoMC(2)
+mlm.fit <- function(dat.m = NULL, design = NULL, coef = 2, B = NULL, full = FALSE, mcore = 4){
+  x0 <- design[,coef, drop = FALSE]
+  xb <- design[,-coef, drop = FALSE]
+  xperm <- if(is.null(B)){
+    x0
+  }else{
+    # registerDoMC(mcore)
+    # foreach(i=1:B, .combine = cbind) %dopar% (sample(x0))
+    replicate(B, sample(x0))
+  }
+  result <- beta_regress(M = dat.m, pv = xperm, svs = xb, full = as.numeric(TRUE))
+  result
 }
 
 

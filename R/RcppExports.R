@@ -26,3 +26,16 @@ arma_eigen <- function(M) {
     .Call('Rcppsva_arma_eigen', PACKAGE = 'Rcppsva', M)
 }
 
+#' Linear regression on covariate of interest when comparing with other covariates
+#' @title beta_regress
+#' @param M m x n expression matrix; Each row represents probes and each col means samples
+#' @param pv n x B design matrix; Each col means phenotype of interest, and if B >=2, 
+#'        means we have B-1 permutations on covariates of interest
+#' @param svs n x (p-1) design matrix; Each row represent samples and each col means parameters
+#' @param full full output or coefficient only
+#' @export
+#' @author Xin Zhou
+beta_regress <- function(M, pv, svs, full = 0L) {
+    .Call('Rcppsva_beta_regress', PACKAGE = 'Rcppsva', M, pv, svs, full)
+}
+

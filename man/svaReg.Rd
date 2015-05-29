@@ -4,13 +4,14 @@
 \alias{svaReg}
 \title{svaReg}
 \usage{
-svaReg(dat.m = NULL, pheno = NULL, sv.m = NULL, qvalue0 = 0.1,
+svaReg(dat.m = NULL, design = NULL, sv.m = NULL, qvalue0 = 0.1,
   backend = c("NULL", "limma"), verbose = FALSE)
 }
 \arguments{
 \item{dat.m}{n x m M|beta matrix for n CpG sites across m different patient samples.}
 
-\item{pheno}{phenotype of interested; m-length vector reresent patient samples' phenotype.}
+\item{design}{phenotype of interested; m-length vector reresent patient samples' phenotype.
+Optional: [combine with sample pair information]}
 
 \item{sv.m}{surrogate variables matrix calculate from \link{isvaFn} other sva methods.}
 

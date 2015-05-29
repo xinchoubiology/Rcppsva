@@ -56,3 +56,49 @@ arma::vec arma_eigen(const arma::mat & M){
 }
 
 
+//' Linear regression on covariate of interest when comparing with other covariates
+//' @title beta_regress
+//' @param M m x n expression matrix; Each row represents probes and each col means samples
+//' @param pv n x B design matrix; Each col means phenotype of interest, and if B >=2, 
+//'        means we have B-1 permutations on covariates of interest
+//' @param svs n x (p-1) design matrix; Each row represent samples and each col means parameters
+//' @param full full output or coefficient only
+//' @export
+//' @author Xin Zhou
+// [[Rcpp::export]]
+Rcpp::List beta_regress(const arma::mat & M, const arma::mat & pv, const arma::mat & svs, const int full = 0){
+  int n = svs.n_rows;
+  arma::mat Q, R;
+  arma::qr(Q, R, svs);
+  Q = Q.cols(0, svs.n_cols-1);
+  arma::mat S   = arma::eye<arma::mat>(n, n) - Q * Q.t();     // n x n
+  arma::mat sv  = S * pv;                                     // sv n x n x n x B = n x B
+  arma::vec vsv = arma::diagvec(arma::trans(pv) * sv);        // B x n x n x B = B x B
+  arma::mat b   = M * arma::trans(S) * pv;                    // m x n x n x n x n x B = m x B
+  b.each_row() /= vsv.t();
+  if(full == 0){
+    return Rcpp::List::create(Rcpp::Named("coef") = b);
+  }
+  else{
+    arma::mat sy = M * S;    // m x n x n x n = m x n
+    int df = M.n_cols - 1 - svs.n_cols;  // since in QR the rank are all full rank == col(svs)
+    int B = pv.n_cols;
+    arma::mat sigma(M.n_rows, B);
+    if(B == 1){
+      sigma = arma::sqrt(arma::sum(arma::square(sy - b * sv.t()), 1) / df);
+    }
+    else{
+      #pragma omp parallel for schedule(dynamic, 32) shared(sy) num_threads(OMP_NUM_THREADS)
+      for(int i = 0; i < B; i++){
+        sigma.col(i) = arma::sum(arma::square(sy - b.col(i) * sv.col(i).t()), 1);
+      }
+      sigma = arma::sqrt(sigma / df);
+    }
+    return Rcpp::List::create(Rcpp::Named("coef") = b,
+                              Rcpp::Named("sigma") = sigma,
+                              Rcpp::Named("stdev_unscaled") = arma::sqrt(1 / vsv),
+                              Rcpp::Named("df.residuals") = df);
+  }
+}
+
+

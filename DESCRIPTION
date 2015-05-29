@@ -29,7 +29,7 @@ Date: 2015-05-23
 Maintainer: Xin Zhou <xinchoubiology@gmail.com>
 License: Artistic-2.0
 LazyData: TRUE
-Depends: R (>= 2.8), mgcv, genefilter, fastICA, qvalue, limma
+Depends: R (>= 2.8), mgcv, genefilter, fastICA, qvalue, limma, foreach
 Suggests: limma, pamr, bladderbatch, BiocStyle, zebrafishRNASeq,
           testthat
 Imports:

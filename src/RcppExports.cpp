@@ -31,3 +31,17 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// beta_regress
+Rcpp::List beta_regress(const arma::mat& M, const arma::mat& pv, const arma::mat& svs, const int full);
+RcppExport SEXP Rcppsva_beta_regress(SEXP MSEXP, SEXP pvSEXP, SEXP svsSEXP, SEXP fullSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< const arma::mat& >::type M(MSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type pv(pvSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type svs(svsSEXP);
+    Rcpp::traits::input_parameter< const int >::type full(fullSEXP);
+    __result = Rcpp::wrap(beta_regress(M, pv, svs, full));
+    return __result;
+END_RCPP
+}

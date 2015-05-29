@@ -4,7 +4,7 @@
 ##' described in Johnson et al. 2007. It uses either parametric or non-parametric empirical Bayes frameworks for adjusting data for
 ##' batch effects.  Users are returned an expression matrix that has been corrected for batch effects. The input
 ##' data are assumed to be cleaned and normalized before batch effect removal.[[Cpp Rewrite and we finally get 100x speedup]]
-##' (For 485512 x 6 expression array matrix = 9622.983 secs = 2 hrs 40 mins)
+##' (For 485512 x 6 expression array matrix = 9622.983 secs = 2 hrs 40 mins) and origin source code of pure R version is from minif package
 ##'
 ##' @param dat Genomic measure matrix (dimensions probe x sample) - for example, expression matrix
 ##' @param batch {Batch covariate (only one batch allowed)}
@@ -21,7 +21,7 @@ ComBat <- function(dat, batch, mod=NULL, par.prior=TRUE,prior.plots=FALSE) {
   # make batch a factor and make a set of indicators for batch
   if(length(dim(batch))>1){stop("This version of ComBat only allows one batch variable")}  ## to be updated soon!
   batch <- as.factor(batch)
-  batchmod <- model.matrix(~-1+batch)
+  batchmod <- model.matrix(~ -1 + batch)
   cat("Found",nlevels(batch),'batches\n')
 
   # A few other characteristics on the batches

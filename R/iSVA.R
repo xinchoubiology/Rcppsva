@@ -22,8 +22,8 @@ estDimRMT <- function(dat.m, plot = TRUE){
   Q <- nrow(M) / ncol(M)
   lambdaMAX <- (1 + 1/Q + 2*sqrt(1/Q))
   lambdaMIN <- (1 + 1/Q - 2*sqrt(1/Q))
-  #lambdaMAX <- sigma2 * (1 + 2*sqrt(1/Q))
-  #lambdaMIN <- sigma2 * (1 - 2*sqrt(1/Q))
+  ## lambdaMAX <- sigma2 * (1 + 2*sqrt(1/Q))
+  ## lambdaMIN <- sigma2 * (1 - 2*sqrt(1/Q))
 
   ### P(lambda)'s sampling
   ns <- ncol(M)
@@ -79,6 +79,7 @@ estDimRMT <- function(dat.m, plot = TRUE){
 ##'
 ##' @title isvaFn
 ##' @param dat.m Data matrix whose rows represent different labeling features and columns stand for the different samples
+##' @param design design matrix for expression/methylation microarray
 ##' @param qcutoff qvalue's cutoff, control the FDR(false discovery rate)
 ##' @return n.isv number of ISVs
 ##' @return isv matrix of ISV
@@ -86,13 +87,13 @@ estDimRMT <- function(dat.m, plot = TRUE){
 ##' @importFrom qvalue qvalue
 ##' @importFrom fastICA fastICA
 ##' @author Xin Zhou \url{xinchoubiology@@gmail.com}
-isvaFn <- function(dat.m = NULL, pheno = NULL, type = c("M", "beta"), qcutoff = 0.05, verbose = FALSE){
+isvaFn <- function(dat.m = NULL, design = NULL, type = c("M", "beta"), qcutoff = 0.05, verbose = FALSE){
   type <- match.arg(type)
   if(type == "beta"){
     cat(sprintf("M values transform ...\n"))
     dat.m <- log2(dat.m / (1 - dat.m))
   }
-  lm.o <- lm(t(dat.m) ~ pheno);
+  lm.o <- lm(t(dat.m) ~ -1 + design);
   res.m <- t(lm.o$residuals);
   ## estimate dimension for ICA
   rmt.o <- estDimRMT(res.m, plot = FALSE);
@@ -136,7 +137,8 @@ isvaFn <- function(dat.m = NULL, pheno = NULL, type = c("M", "beta"), qcutoff = 
 ##' @description when we search all of the factors which means surrogate variables 
 ##'              update our model.matrix and calculate moderate test
 ##' @param dat.m n x m M|beta matrix for n CpG sites across m different patient samples.
-##' @param pheno phenotype of interested; m-length vector reresent patient samples' phenotype.
+##' @param design phenotype of interested; m-length vector reresent patient samples' phenotype.
+##'        Optional: [combine with sample pair information]
 ##' @param sv.m  surrogate variables matrix calculate from \link{isvaFn} other sva methods.
 ##' @param qvalue0 false discovery rate's threshold; Default = 0.1
 ##' @param backend backend regression packages; Default = "NULL", switch to limma for moderate statistic
@@ -146,11 +148,9 @@ isvaFn <- function(dat.m = NULL, pheno = NULL, type = c("M", "beta"), qcutoff = 
 ##' @return res data.frame
 ##' @export
 ##' @author Xin Zhou \url{xinchoubiology@@gmail.com}
-svaReg <- function(dat.m = NULL, pheno = NULL, sv.m = NULL, qvalue0 = 0.1, backend = c("NULL", "limma"), verbose = FALSE){
+svaReg <- function(dat.m = NULL, design = NULL, sv.m = NULL, qvalue0 = 0.1, backend = c("NULL", "limma"), verbose = FALSE){
   backend <- match.arg(backend)
-  
-  pheno <- as.factor(pheno)
-  modelSv <- model.matrix(~ pheno + sv.m)
+  modelSv <- model.matrix(~ design + sv.m - 1)
   modelNull <- model.matrix(~ sv.m)
   
   
@@ -164,7 +164,7 @@ svaReg <- function(dat.m = NULL, pheno = NULL, sv.m = NULL, qvalue0 = 0.1, backe
     if(nsig > 0){
       ## p.index <- pval.s$ix[1:nsig]
       p.index <- pval.s$ix
-      tmp.lm  <- lm(t(dat.m[p.index,]) ~ modelSv)
+      tmp.lm  <- lm(t(dat.m[p.index,]) ~ modelSv - 1)
       lm.stat <- do.call(rbind, lapply(summary(tmp.lm), function(x) x$coefficients[2,c(1,3)]))
       ## res     <- cbind(lm.stat, pval[p.index], qval[1:nsig])
       res     <- cbind(lm.stat, pval[p.index], qval)
