@@ -99,6 +99,10 @@ isvaFn <- function(dat.m = NULL, design = NULL, type = c("M", "beta"), qcutoff =
   rmt.o <- estDimRMT(res.m, plot = FALSE);
   ncomp <- rmt.o$dim;
   cat(sprintf("rmt evaluated ISVs dimension is %d \n", ncomp));
+  
+  if(ncomp == 0){
+    return(list(n.isv = ncomp, isv = NULL))
+  }
 
   ## perform ICA on res.m
   ICA.o <- fastICA(res.m,n.comp = ncomp);
@@ -150,16 +154,21 @@ isvaFn <- function(dat.m = NULL, design = NULL, type = c("M", "beta"), qcutoff =
 ##' @author Xin Zhou \url{xinchoubiology@@gmail.com}
 svaReg <- function(dat.m = NULL, design = NULL, sv.m = NULL, qvalue0 = 0.1, backend = c("NULL", "limma"), verbose = FALSE){
   backend <- match.arg(backend)
-  modelSv <- model.matrix(~ design + sv.m - 1)
-  modelNull <- model.matrix(~ sv.m)
-  
+  if(is.null(sv.m)){
+    modelSv <- model.matrix(~ -1 + design)
+    modelNull <- model.matrix(~ -1 + design[,-2])
+  }
+  else{
+    modelSv <- model.matrix(~ -1 + design + sv.m)
+    modelNull <- model.matrix(~ -1 + sv.m + design[,-2])
+  }
   
   if(backend == "NULL"){
     pval   <- pvalue(dat.m, modelSv, modelNull)
     pval.s <- sort(pval, decreasing = FALSE, index.return = TRUE)
     qval   <- qvalue(pval.s$x)$qvalue
     nsig   <- length(which(qval < qvalue0))
-    df     <- ncol(dat.m) - ncol(modelSv) + 1
+    df     <- ncol(dat.m) - ncol(modelSv)
     cat(sprintf("Numeber DMP = %d \n", nsig))
     if(nsig > 0){
       ## p.index <- pval.s$ix[1:nsig]
@@ -179,7 +188,7 @@ svaReg <- function(dat.m = NULL, design = NULL, sv.m = NULL, qvalue0 = 0.1, back
   }
   else if(backend == "limma"){
       fit  <- lmFit(dat.m, modelSv)
-      nsv  <- ncol(sv.m)
+      nsv  <- ncol(modelSv) - 2
       contrast.matrix <- cbind("cancer-normal" = c(0, 1, rep(0, nsv)))
       fitc <- contrasts.fit(fit,contrast.matrix)
       fitc <- eBayes(fitc)

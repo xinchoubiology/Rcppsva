@@ -120,3 +120,26 @@ mlm.fit <- function(dat.m = NULL, design = NULL, coef = 2, B = NULL, full = FALS
 }
 
 
+##' fitting L/S model with missing values
+##' @description Beta.NA function is borrow from package sva
+##' @title Beta.NA
+Beta.NA <- function(y,X){
+  des=X[!is.na(y),]
+  y1=y[!is.na(y)]
+  B <- solve(t(des)%*%des)%*%t(des)%*%y1
+  B
+}
+
+##' get contains NA's row, col
+Index.NA <- function(mat, by = c("row", "col")){
+  by <- match.arg(by)
+  if(by == "row"){
+    unique(which(is.na(mat)) %% nrow(mat))
+  }
+  else{
+    unique(which(is.na(mat)) %% ncol(mat))
+  }
+}
+
+
+

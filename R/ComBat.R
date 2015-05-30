@@ -137,7 +137,11 @@ ComBat <- function(dat, batch, mod=NULL, par.prior=TRUE,prior.plots=FALSE) {
   }
 
   bayesdata <- (bayesdata*(sqrt(var.pooled)%*%t(rep(1,n.array))))+stand.mean
+  
+  if(any(is.na(bayesdata))){
+    NAs <- Index.NA(bayesdata, by = "row")
+    bayesdata[NAs, ] <- dat[NAs, ]
+  }
 
   return(bayesdata)
-
 }
