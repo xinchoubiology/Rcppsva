@@ -132,7 +132,7 @@ isvaFn <- function(dat.m = NULL, design = NULL, type = c("M", "beta"), qcutoff =
       cat(sprintf("Build %d SV ...\n", i))
     }
   }
-  return(list(n.isv = ncomp, isv = isv.m))
+  return(list(n.sv = ncomp, sv = isv.m))
 }
 
 ##' svaReg Do regression with selected surrogate variables
