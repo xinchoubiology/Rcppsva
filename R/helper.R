@@ -143,23 +143,32 @@ Index.NA <- function(mat, by = c("row", "col")){
 
 ##' output 450k microarray data frame with ordered positions to BED file
 ##' 
-##' @title print.bed
-##' @param dat.m m x n matrix. Statitical test p-value and each row's name is its probes name
-##' @param bed BED file name
+##' @rdname print
+##' @param x m x n matrix. Statitical test p-value and each row's name is its probes name
+##' @param ... bed BED file name
 ##' @import IlluminaHumanMethylation450kanno.ilmn12.hg19
+##' @import GenomicRanges
+##' @import IRanges IRanges
 ##' @return BED data.frame
+##' @method print bed
 ##' @export
-print.bed <- function(dat.m = NULL, bed = NULL){
-  Location <- IlluminaHumanMethylation450kanno.ilmn12.hg19@data$Locations
+print.bed <- function(x, bed = NULL,...){
+  dat.m <- x$table
+  Location <- data.frame(IlluminaHumanMethylation450kanno.ilmn12.hg19@data$Locations)
   Probes <- rownames(Location)[rownames(Location) %in% rownames(dat.m)]
-  BED <- do.call(rbind, lapply(Probes, function(id){
-                                        c(Location[id, 1], Location[id, 2], Location[id, 2] + 1, dat.m[id, c(4,3)])
-                                       }))
-  colnames(BED) <- c("CHR", "start", "end", "pvalue", "F")
+  BED <- cbind(Location[Probes, 1:2])
+  BED <- cbind(BED, dat.m[Probes, 4:3])
+  colnames(BED) <- c("CHR", "start", "pvalue", "F")
+  
+  BED <- GRanges(seqnames = BED$CHR, ranges = IRanges(start = BED$start, width = 2), p = BED$pvalue, F = BED$F)
+  seqlevels(BED) <- sort(seqlevels(BED))
+  BED <- as.data.frame(sort(BED))[,c(1:3,6,7)]
+  colnames(BED) <- c("chrom", "start", "end", "pvalue", "F")
   if(!is.null(bed)){
-    write.table(BED, file = bed, sep = "\t")
+    write.table(as.matrix(BED), file = bed, sep = "\t", quote = FALSE, row.names = FALSE)
   }
-  BED
+  print(head(BED, 5))
+  cat(sprintf("... %d rows are omitted", nrow(BED) - 5))
 }
 
 
