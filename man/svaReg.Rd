@@ -11,7 +11,8 @@ svaReg(dat.m = NULL, design = NULL, sv.m = NULL, qvalue0 = 0.1,
 \item{dat.m}{n x m M|beta matrix for n CpG sites across m different patient samples.}
 
 \item{design}{phenotype of interested; m-length vector reresent patient samples' phenotype.
-Optional: [combine with sample pair information]}
+Optional: [combine with sample pair information] and mandatory column 2 is covariate
+of interest}
 
 \item{sv.m}{surrogate variables matrix calculate from \link{isvaFn} other sva methods.}
 

@@ -68,9 +68,10 @@ arma::vec arma_eigen(const arma::mat & M){
 // [[Rcpp::export]]
 Rcpp::List beta_regress(const arma::mat & M, const arma::mat & pv, const arma::mat & svs, const int full = 0){
   int n = svs.n_rows;
+  int m = svs.n_cols;
   arma::mat Q, R;
   arma::qr(Q, R, svs);
-  Q = Q.cols(0, svs.n_cols-1);
+  Q = Q.cols(0, m - 1);                                       // svs.n_cols-1 is Q's rank
   arma::mat S   = arma::eye<arma::mat>(n, n) - Q * Q.t();     // n x n
   arma::mat sv  = S * pv;                                     // sv n x n x n x B = n x B
   arma::vec vsv = arma::diagvec(arma::trans(pv) * sv);        // B x n x n x B = B x B
@@ -81,7 +82,7 @@ Rcpp::List beta_regress(const arma::mat & M, const arma::mat & pv, const arma::m
   }
   else{
     arma::mat sy = M * S;    // m x n x n x n = m x n
-    int df = M.n_cols - 1 - svs.n_cols;  // since in QR the rank are all full rank == col(svs)
+    int df = M.n_cols - 1 - m;  // since in QR the rank are all full rank == col(svs)
     int B = pv.n_cols;
     arma::mat sigma(M.n_rows, B);
     if(B == 1){
@@ -101,4 +102,49 @@ Rcpp::List beta_regress(const arma::mat & M, const arma::mat & pv, const arma::m
   }
 }
 
-
+//' Bootstrap testing on regression model for covariate of interested
+//' 
+//' @title bootstrap_regress
+//' @description Dimitris[Bootstrap hypothesis testing in regression models] 
+//' @param M m x n expression matrix; Each row represents probes and each col means samples
+//' @param mod n x p design matrix; 
+//' @param modn n x (p-1) null design matrix - covariate of interest;
+//' @param B n x B matrix; Bootstrap iterations index matrix
+//' @export
+//' @author Xin Zhou
+//  [[Rcpp::export]]
+Rcpp::List bootstrap_regress(const arma::mat & M, const arma::mat & mod, const arma::mat & modn, const arma::umat & B){
+  int n = mod.n_rows;
+  int m = mod.n_cols;
+  arma::mat Q, R;
+  arma::qr(Q, R, mod);
+  Q = Q.cols(0, m - 1);
+  R = R.submat(0, 0, m - 1, m - 1);
+  arma::mat S   = arma::eye<arma::mat>(n, n) - Q * Q.t();     // n x n
+  arma::mat resid = M * S;                                    // m x n x n x n = m x n
+  arma::vec scale = sqrt(arma::diagvec(S));                   // n x 1
+  resid.each_row() /= scale.t();
+  // calculate null M
+  arma::mat Qn, Rn;
+  arma::qr(Qn, Rn, modn);
+  arma::mat null = M * Qn * Qn.t();                          // m x n x n x n = m x n
+  // Bootstrap test
+  arma::mat beta0  = arma::zeros<arma::mat>(M.n_rows, B.n_cols);    // m x B
+  arma::mat sigma0 = arma::zeros<arma::mat>(M.n_rows, B.n_cols);    // m x B
+  int df = M.n_cols - m;
+  
+  
+  #pragma omp parallel for schedule(dynamic, 32) num_threads(OMP_NUM_THREADS)
+  for(int i = 0; i < B.n_cols; i++){
+    arma::uvec index = arma::vectorise(B.col(i));             // n vector
+    arma::mat Mb  = null + resid.cols(index);                 // m x n + m x n = m x n
+    arma::mat tmp = R.i() * Q.t() * Mb.t();                   // p x p x p x n x n x m = p x m
+    beta0.col(i)  = tmp.row(1).t();                           // m vector assignment
+    // m x 1
+    sigma0.col(i) = arma::sum(arma::square(Mb - Mb * Q * Q.t()), 1); 
+  }
+  sigma0 = arma::sqrt(sigma0 / df);
+  return Rcpp::List::create(Rcpp::Named("coef") = beta0,
+                            Rcpp::Named("sigma") = sigma0,
+                            Rcpp::Named("df.residuals") = df);
+}

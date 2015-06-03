@@ -4,17 +4,23 @@
 \alias{print.bed}
 \title{output 450k microarray data frame with ordered positions to BED file}
 \usage{
-\method{print}{bed}(x, ...)
+\method{print}{bed}(x, bed = NULL,
+  db = IlluminaHumanMethylation450kanno.ilmn12.hg19, ...)
 }
 \arguments{
 \item{x}{m x n matrix. Statitical test p-value and each row's name is its probes name}
 
-\item{...}{bed BED file name}
+\item{...}{bed BED file name
+db  Database of probes}
 }
 \value{
 BED data.frame
 }
 \description{
 output 450k microarray data frame with ordered positions to BED file
+}
+\examples{
+require(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+data(IlluminaHumanMethylation450kanno.ilmn12.hg19)
 }
 

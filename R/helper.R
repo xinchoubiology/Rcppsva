@@ -111,14 +111,178 @@ mlm.fit <- function(dat.m = NULL, design = NULL, coef = 2, B = NULL, full = FALS
   xperm <- if(is.null(B)){
     x0
   }else{
-    # registerDoMC(mcore)
-    # foreach(i=1:B, .combine = cbind) %dopar% (sample(x0))
-    replicate(B, sample(x0))
+    ## replicate(B, sample(x0))
+    replicate(B, unlist(lapply(1:(nrow(x0)/2), function(x) sample(c(1,0)))))
   }
   result <- beta_regress(M = dat.m, pv = xperm, svs = xb, full = as.numeric(TRUE))
   result
 }
 
+##' bootstrap wrapper
+##' 
+##' @title bootstrap.fit
+##' @param dat.m n x m matrix of methylation microarray
+##' @param design design matrix for expression data matrix(data.m)
+##' @param coef covariate of interest; Default = 2
+##' @param B permutation number of covariates of interest
+##' @return list
+##'         coefficient
+##'         sigma
+##'         df.residule
+##' @export
+bootstrap.fit <- function(dat.m = NULL, design = NULL, coef = 2, B = NULL){
+  mod   <- design
+  mod0  <- design[,-coef,drop=FALSE]
+  xperm <- replicate(B, sample(1:ncol(dat.m), replace = TRUE))
+  result <- bootstrap_regress(M = dat.m, mod = mod, modn = mod0, B = xperm)
+  result
+}
+
+##' moderest lm T statistic
+##' @title mlm.tstat
+##' @param fit object of mlm.fit; contains coefficient, sigma
+##' @return list of 2 components
+##'         post.sigma
+##'         df.total
+##'         t score
+##' @export
+mlm.tstat <- function(fit){
+  s2 <- apply(fit$sigma^2, 2, limma::squeezeVar, fit$df.residuals)
+  B  <- ncol(fit$coef)
+  if("stdev_unscaled" %in% names(fit))
+    t  <- lapply(1:B, function(i) fit$coef[,i] / fit$stdev_unscaled[i] / sqrt(s2[[i]]$var.post))
+  else
+    t  <- lapply(1:B, function(i) fit$coef[,i] / sqrt(s2[[i]]$var.post))
+  
+  df.total <- fit$df.residuals + sapply(s2, "[[", "df.prior")
+  post.sigma <- sqrt(do.call(cbind, lapply(s2, "[[", "var.post")))
+  ## p.value <- lapply(1:B, function(i) 2 * pt(-abs(t[[i]]), df = df.total[[i]]))
+  
+  return(list(post.sigma = post.sigma, df.total = df.total))
+}
+
+##' If our data is paired, wilcoxon rank test can be used to test the significnat of sites
+##' 
+##' @title wilcox.fit
+##' @description calculate wolcoxon signed rank sum test for each CpG probes of microarray;
+##'              support multiple core parallism calculation.
+##' @param dat.m n x m delta M|beta matrix for n CpG sites across 2*m paired different patient samples
+##' @param alternative a character string specifying the alternative hypothesis; 
+##'        c("two.sided", "greater", "less") and "two.sided" is default
+##' @param qvalue0 false discovery rate's threshold; Default = 0.1
+##' @param mcore Cpu cores can be used in test
+##' @return res list
+##'             siggene data.frame
+##'             null    data.frame
+##' @importFrom doMC registerDoMC
+##' @importFrom plyr aaply
+##' @importFrom qvalue qvalue
+##' @export
+##' @author Xin Zhou
+wilcox.fit <- function(dat.m = NULL, alternative = c("two.sided", "greater", "less"), qvalue0 = 0.1, mcore = 4){
+  alternative <- match.arg(alternative)
+  registerDoMC(cores = mcore)
+  if(ncol(dat.m) >= 10){
+    rank.m <- aaply(dat.m, 1, .fun = function(d){
+      r <- rep(0, length(d))
+      r[which(d != 0)] <- rank(d[which(d != 0)])
+    }, .parallel = TRUE
+    )
+    sgn.m  <- aaply(dat.m, 1, sign, .parallel = TRUE)
+    W      <- abs(rowSums(rank.m * sgn.m))
+    Nr     <- rowSums(abs(sgn.m))
+    sigma  <- sqrt(Nr * (Nr + 1) * (2 * Nr + 1)/6)
+    p <- pnorm(W, mean = 0.5, sd = sigma, lower.tail = TRUE)
+    pval <- switch(alternative,
+                   two.sided = pmin(p, 1-p),
+                   greater   = 1-p,
+                   less      = p
+    )
+    qval <- p.adjust(pval, method = "fdr")
+    sig.cg <- which(qval <= qvalue0)
+  } else {
+    pval <- aaply(dat.m, 1, .fun = function(x){
+      wilcox.test(x, alternative = alternative)$p.value
+    }, .parallel = TRUE
+    )
+    qval <- p.adjust(pval, method = "fdr")
+    sig.cg <- which(qval <= qvalue0)
+  }
+  
+  table <- data.frame(pvalue = pval, qvalue = qval)
+  rownames(table) <- rownames(dat.m)
+  
+  res <- list(siggene = table[sig.cg,], null = table[-sig.cg,])
+  res
+}
+
+##' output 450k microarray data frame with ordered positions to BED file
+##' 
+##' @rdname print
+##' @param x m x n matrix. Statitical test p-value and each row's name is its probes name
+##' @param ... bed BED file name
+##'            db  Database of probes
+##' @return BED data.frame
+##' @method print bed
+##' @examples 
+##' require(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+##' data(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+##' @export
+print.bed <- function(x, bed = NULL, db = IlluminaHumanMethylation450kanno.ilmn12.hg19, ...){
+  dat.m <- x$table
+  Location <- data.frame(db@data$Locations)
+  Probes <- rownames(Location)[rownames(Location) %in% rownames(dat.m)]
+  BED <- cbind(Location[Probes, 1:2])
+  BED <- cbind(BED, dat.m[Probes, 4:3])
+  colnames(BED) <- c("CHR", "start", "pvalue", "F")
+  
+  BED <- GenomicRanges::GRanges(seqnames = BED$CHR, ranges = IRanges::IRanges(start = BED$start, width = 2), p = BED$pvalue, F = BED$F)
+  seqlevels(BED) <- sort(seqlevels(BED))
+  BED <- as.data.frame(sort(BED))[,c(1:3,6,7)]
+  colnames(BED) <- c("chrom", "start", "end", "pvalue", "F")
+  if(!is.null(bed)){
+    write.table(as.matrix(BED), file = bed, sep = "\t", quote = FALSE, row.names = FALSE)
+  }
+  print(head(BED, 5))
+  cat(sprintf("... %d rows are omitted", nrow(BED) - 5))
+}
+
+##' clusterMaker function based on spatial distance
+##'
+##' @title clusterMaker
+##' @param chr Chromosome vector
+##' @param pos position numeric vector
+##' @param maxGap max gap length between 2 probes within a region
+##' @param names probe names vector
+##' @return cluster list of length m(m probes). Probes within same region have same region identities list.
+##' @importFrom plyr llply
+##' @details If you define the maxGap 500, so we can guarantee probes in different regions has distance >= maxGap.
+##'          As the result, if we extend region upstream & downstream maxGap / 2, our extended regions have no overlap
+##' @examples 
+##' # Location <- data.frame(IlluminaHumanMethylation450kanno.ilmn12.hg19$locations)
+##' # Probes <- rownames(Location)[rownames(Location) %in% rownames(dat.m)]
+##' # BED <- cbind(Location[Probes, 1:2])
+##' # BED <- cbind(BED, dat.m[Probes, 4:3])
+##' # clusters <- clusterMaker(chr = BED$chr, pos = BED$pos, maxGap = 1000, probenames = rownames(BED))
+##' @export
+clusterMaker <- function(chr, pos, maxGap = 500, names){
+  Genome     <- GenomicRanges::GRanges(seqnames = chr, ranges = IRanges::IRanges(start = pos, width = 1), name = names)
+  seqlevels(Genome) <- sort(seqlevels(Genome))
+  Genome     <- sort(Genome)
+  ChrIndexes <- split(Genome, Genome@seqnames)
+  clusterID  <- llply(ChrIndexes, function(chr){
+    ClustIdx <- (diff(c(0, start(chr))) > maxGap) + 0
+    cumsum(ClustIdx)
+  })
+  offset <- 0
+  for(i in 1:length(clusterID)){
+    clusterID[[i]] <- clusterID[[i]] + offset
+    offset <- tail(clusterID[[i]], 1)
+  }
+  clusterID <- unlist(clusterID)
+  names(clusterID) <- Genome$name
+  clusterID
+}
 
 ##' fitting L/S model with missing values
 ##' @description Beta.NA function is borrow from package sva
@@ -131,6 +295,8 @@ Beta.NA <- function(y,X){
 }
 
 ##' get contains NA's row, col
+##' @description Index.NA function is borrow from package sva
+##' @title Index.NA
 Index.NA <- function(mat, by = c("row", "col")){
   by <- match.arg(by)
   if(by == "row"){
@@ -140,35 +306,4 @@ Index.NA <- function(mat, by = c("row", "col")){
     unique(which(is.na(mat)) %% ncol(mat))
   }
 }
-
-##' output 450k microarray data frame with ordered positions to BED file
-##' 
-##' @rdname print
-##' @param x m x n matrix. Statitical test p-value and each row's name is its probes name
-##' @param ... bed BED file name
-##' @import IlluminaHumanMethylation450kanno.ilmn12.hg19
-##' @import GenomicRanges
-##' @import IRanges IRanges
-##' @return BED data.frame
-##' @method print bed
-##' @export
-print.bed <- function(x, bed = NULL,...){
-  dat.m <- x$table
-  Location <- data.frame(IlluminaHumanMethylation450kanno.ilmn12.hg19@data$Locations)
-  Probes <- rownames(Location)[rownames(Location) %in% rownames(dat.m)]
-  BED <- cbind(Location[Probes, 1:2])
-  BED <- cbind(BED, dat.m[Probes, 4:3])
-  colnames(BED) <- c("CHR", "start", "pvalue", "F")
-  
-  BED <- GRanges(seqnames = BED$CHR, ranges = IRanges(start = BED$start, width = 2), p = BED$pvalue, F = BED$F)
-  seqlevels(BED) <- sort(seqlevels(BED))
-  BED <- as.data.frame(sort(BED))[,c(1:3,6,7)]
-  colnames(BED) <- c("chrom", "start", "end", "pvalue", "F")
-  if(!is.null(bed)){
-    write.table(as.matrix(BED), file = bed, sep = "\t", quote = FALSE, row.names = FALSE)
-  }
-  print(head(BED, 5))
-  cat(sprintf("... %d rows are omitted", nrow(BED) - 5))
-}
-
 

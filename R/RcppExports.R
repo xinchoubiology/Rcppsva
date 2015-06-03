@@ -39,3 +39,17 @@ beta_regress <- function(M, pv, svs, full = 0L) {
     .Call('Rcppsva_beta_regress', PACKAGE = 'Rcppsva', M, pv, svs, full)
 }
 
+#' Bootstrap testing on regression model for covariate of interested
+#' 
+#' @title bootstrap_regress
+#' @description Dimitris[Bootstrap hypothesis testing in regression models] 
+#' @param M m x n expression matrix; Each row represents probes and each col means samples
+#' @param mod n x p design matrix; 
+#' @param modn n x (p-1) null design matrix - covariate of interest;
+#' @param B n x B matrix; Bootstrap iterations index matrix
+#' @export
+#' @author Xin Zhou
+bootstrap_regress <- function(M, mod, modn, B) {
+    .Call('Rcppsva_bootstrap_regress', PACKAGE = 'Rcppsva', M, mod, modn, B)
+}
+

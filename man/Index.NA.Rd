@@ -2,11 +2,14 @@
 % Please edit documentation in R/helper.R
 \name{Index.NA}
 \alias{Index.NA}
-\title{get contains NA's row, col}
+\title{Index.NA}
 \usage{
 Index.NA(mat, by = c("row", "col"))
 }
 \description{
+Index.NA function is borrow from package sva
+}
+\details{
 get contains NA's row, col
 }
 

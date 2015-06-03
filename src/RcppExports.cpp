@@ -45,3 +45,17 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// bootstrap_regress
+Rcpp::List bootstrap_regress(const arma::mat& M, const arma::mat& mod, const arma::mat& modn, const arma::umat& B);
+RcppExport SEXP Rcppsva_bootstrap_regress(SEXP MSEXP, SEXP modSEXP, SEXP modnSEXP, SEXP BSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< const arma::mat& >::type M(MSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type mod(modSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type modn(modnSEXP);
+    Rcpp::traits::input_parameter< const arma::umat& >::type B(BSEXP);
+    __result = Rcpp::wrap(bootstrap_regress(M, mod, modn, B));
+    return __result;
+END_RCPP
+}

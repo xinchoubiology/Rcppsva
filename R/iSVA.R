@@ -142,12 +142,13 @@ isvaFn <- function(dat.m = NULL, design = NULL, type = c("M", "beta"), qcutoff =
 ##'              update our model.matrix and calculate moderate test
 ##' @param dat.m n x m M|beta matrix for n CpG sites across m different patient samples.
 ##' @param design phenotype of interested; m-length vector reresent patient samples' phenotype.
-##'        Optional: [combine with sample pair information]
+##'        Optional: [combine with sample pair information] and mandatory column 2 is covariate
+##'        of interest
 ##' @param sv.m  surrogate variables matrix calculate from \link{isvaFn} other sva methods.
 ##' @param qvalue0 false discovery rate's threshold; Default = 0.1
 ##' @param backend backend regression packages; Default = "NULL", switch to limma for moderate statistic
 ##' @param verbose Optional; Default FALSE
-##' @importFrom limma lmFit eBayes
+##' @importFrom limma lmFit eBayes contrasts.fit
 ##' @importFrom qvalue qvalue
 ##' @return res data.frame
 ##' @export
@@ -193,7 +194,7 @@ svaReg <- function(dat.m = NULL, design = NULL, sv.m = NULL, qvalue0 = 0.1, back
       fitc <- contrasts.fit(fit,contrast.matrix)
       fitc <- eBayes(fitc)
       ## res  <- topTableF(fitc, number = nsig)
-      res  <- topTableF(fitc, number = nrow(dat.m))
+      res  <- topTableF(fitc, number = Inf)
       qval <- qvalue(res$P.Value)$qvalue
       nsig <- length(which(qval < qvalue0))
       cat(sprintf("Numeber DMP = %d \n", nsig))
