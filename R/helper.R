@@ -259,11 +259,12 @@ print.bed <- function(x, bed = NULL, db = IlluminaHumanMethylation450kanno.ilmn1
 ##' @details If you define the maxGap 500, so we can guarantee probes in different regions has distance >= maxGap.
 ##'          As the result, if we extend region upstream & downstream maxGap / 2, our extended regions have no overlap
 ##' @examples 
-##' # Location <- data.frame(IlluminaHumanMethylation450kanno.ilmn12.hg19$locations)
-##' # Probes <- rownames(Location)[rownames(Location) %in% rownames(dat.m)]
-##' # BED <- cbind(Location[Probes, 1:2])
-##' # BED <- cbind(BED, dat.m[Probes, 4:3])
-##' # clusters <- clusterMaker(chr = BED$chr, pos = BED$pos, maxGap = 1000, probenames = rownames(BED))
+##' require(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+##' Location <- data.frame(IlluminaHumanMethylation450kanno.ilmn12.hg19@@data$locations)
+##' Probes <- rownames(Location)[rownames(Location) %in% rownames(dat.m)]
+##' BED <- cbind(Location[Probes, 1:2])
+##' BED <- cbind(BED, dat.m[Probes, 4:3])
+##' cluster <- clusterMaker(chr = BED$chr, pos = BED$pos, maxGap = 1000, names = rownames(BED))
 ##' @export
 clusterMaker <- function(chr, pos, maxGap = 500, names){
   Genome     <- GenomicRanges::GRanges(seqnames = chr, ranges = IRanges::IRanges(start = pos, width = 1), name = names)
@@ -284,12 +285,33 @@ clusterMaker <- function(chr, pos, maxGap = 500, names){
   clusterID
 }
 
+##' bump hunting algorithm one clusters predefined by distance/correlation constraints
+##' 
+##' @title regionSeeker
+##' @param beta vector of different probes
+##' @param chr Chromosome vector
+##' @param pos position numeric vector
+##' @param cluster clusters defined by arguments or \link{clusterMaker}
+##' @param maxGap max gap length between 2 probes within a region ; 
+##'        used in function \link{clusterMaker}
+##' @param names probe names vector ; used in function \link{clusterMaker}
+##' @details if a arbitary threshold is defined, regionSeeker will return a table (within / without)
+##'          the threshold. In bump hunting algorithms, these contiguous probes mean bumps.
+##' @return Table of predict regions
+##' @export
+regionSeeker <- function(beta, chr, pos, cluster = NULL, maxGap = 500, names){
+  if(is.null(cluster)){
+    cluster <- clusterMaker(chr = chr, pos = pos, maxGap = maxGap, names = names)
+  }
+}
+
+
 ##' fitting L/S model with missing values
 ##' @description Beta.NA function is borrow from package sva
 ##' @title Beta.NA
 Beta.NA <- function(y,X){
-  des=X[!is.na(y),]
-  y1=y[!is.na(y)]
+  des <- X[!is.na(y),]
+  y1 <- y[!is.na(y)]
   B <- solve(t(des)%*%des)%*%t(des)%*%y1
   B
 }
