@@ -389,7 +389,7 @@ regionSeeker <- function(beta, chr, pos, cluster = NULL, maxGap = 500, names,
                            L       = sapply(segments[[i]], function(ix) nrow(ix)),
                            cgnames = sapply(segments[[i]], function(ix) paste0(ix[,1],collapse = ";")),
                            pvalue  = sapply(segments[[i]], function(ix) min(sum(mean(ix[,3]) >= colMeans(ix[,-(1:7)])), sum(mean(ix[,3]) <= colMeans(ix[,-(1:7)]))) / L),
-                           parea   = sapply(segments[[i]], function(ix) sum(abs(sum(ix[,3])) >= abs(colSums(ix[,-(1:7)])))/ L),
+                           parea   = sapply(segments[[i]], function(ix) sum(abs(sum(ix[,3])) <= abs(colSums(ix[,-(1:7)])))/ L),
                            status  = sapply(segments[[i]], function(ix) names(segments)[i]))
   }
   names(res) <- names(segments)

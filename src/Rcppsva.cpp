@@ -136,7 +136,7 @@ Rcpp::List bootstrap_regress(const arma::mat & M, const arma::mat & mod, const a
   
   
   #pragma omp parallel for schedule(dynamic, 32) num_threads(OMP_NUM_THREADS)
-  for(int i = 0; i < B.n_cols; i++){
+  for(unsigned int i = 0; i < B.n_cols; i++){
     arma::uvec index = arma::vectorise(B.col(i));             // n vector
     arma::mat Mb  = null + resid.cols(index);                 // m x n + m x n = m x n
     arma::mat tmp = R.i() * Q.t() * Mb.t();                   // p x p x p x n x n x m = p x m
