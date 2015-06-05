@@ -1,2 +1,2 @@
 # Rcppsva
-Rcpp based Surrogate Variable Analysis and Rewrite by RcppEigen and RcppGSL.
+Rcpp Integration Surrogate Variable Analysis and Rewrite by RcppEigen and RcppGSL.
