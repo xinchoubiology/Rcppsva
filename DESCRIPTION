@@ -30,8 +30,8 @@ Maintainer: Xin Zhou <xinchoubiology@gmail.com>
 License: Artistic-2.0
 LazyData: TRUE
 Depends: R (>= 2.8), mgcv, genefilter, fastICA, qvalue, limma, foreach, plyr, doMC, 
-         GenomicRanges, IRanges
-Suggests: limma, pamr, bladderbatch, BiocStyle, zebrafishRNASeq,
+         GenomicRanges, IRanges, data.table
+Suggests: limma, pamr, bladderbatch, BiocStyle,
           testthat, IlluminaHumanMethylation450kanno.ilmn12.hg19
 Imports:
     Rcpp (>= 0.11.6), RcppEigen (>= 0.3.2.4.0), methods

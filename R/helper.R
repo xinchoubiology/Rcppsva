@@ -115,6 +115,9 @@ mlm.fit <- function(dat.m = NULL, design = NULL, coef = 2, B = NULL, full = FALS
     replicate(B, unlist(lapply(1:(nrow(x0)/2), function(x) sample(c(1,0)))))
   }
   result <- beta_regress(M = dat.m, pv = xperm, svs = xb, full = as.numeric(TRUE))
+  if(!is.null(rownames(dat.m))){
+    rownames(result$coef) <- rownames(result$sigma) <- rownames(dat.m)
+  }
   result
 }
 
@@ -135,6 +138,9 @@ bootstrap.fit <- function(dat.m = NULL, design = NULL, coef = 2, B = NULL){
   mod0  <- design[,-coef,drop=FALSE]
   xperm <- replicate(B, sample(1:ncol(dat.m), replace = TRUE))
   result <- bootstrap_regress(M = dat.m, mod = mod, modn = mod0, B = xperm)
+  if(!is.null(rownames(dat.m))){
+    rownames(result$coef) <- rownames(result$sigma) <- rownames(dat.m)
+  }
   result
 }
 
@@ -254,23 +260,24 @@ print.bed <- function(x, bed = NULL, db = IlluminaHumanMethylation450kanno.ilmn1
 ##' @param pos position numeric vector
 ##' @param maxGap max gap length between 2 probes within a region
 ##' @param names probe names vector
-##' @return cluster list of length m(m probes). Probes within same region have same region identities list.
+##' @return cluster data.frame of length m(m probes). Probes within same region have same region identities list.
 ##' @importFrom plyr llply
+##' @import GenomicRanges
 ##' @details If you define the maxGap 500, so we can guarantee probes in different regions has distance >= maxGap.
 ##'          As the result, if we extend region upstream & downstream maxGap / 2, our extended regions have no overlap
 ##' @examples 
 ##' require(IlluminaHumanMethylation450kanno.ilmn12.hg19)
-##' Location <- data.frame(IlluminaHumanMethylation450kanno.ilmn12.hg19@@data$locations)
+##' Location <- data.frame(IlluminaHumanMethylation450kanno.ilmn12.hg19@@data$Locations)
 ##' Probes <- rownames(Location)[rownames(Location) %in% rownames(dat.m)]
 ##' BED <- cbind(Location[Probes, 1:2])
 ##' BED <- cbind(BED, dat.m[Probes, 4:3])
 ##' cluster <- clusterMaker(chr = BED$chr, pos = BED$pos, maxGap = 1000, names = rownames(BED))
 ##' @export
 clusterMaker <- function(chr, pos, maxGap = 500, names){
-  Genome     <- GenomicRanges::GRanges(seqnames = chr, ranges = IRanges::IRanges(start = pos, width = 1), name = names)
+  Genome     <- GRanges(seqnames = chr, ranges = IRanges::IRanges(start = pos, width = 1), names = names)
   seqlevels(Genome) <- sort(seqlevels(Genome))
   Genome     <- sort(Genome)
-  ChrIndexes <- split(Genome, Genome@seqnames)
+  ChrIndexes <- split(Genome, seqnames(Genome))
   clusterID  <- llply(ChrIndexes, function(chr){
     ClustIdx <- (diff(c(0, start(chr))) > maxGap) + 0
     cumsum(ClustIdx)
@@ -281,8 +288,42 @@ clusterMaker <- function(chr, pos, maxGap = 500, names){
     offset <- tail(clusterID[[i]], 1)
   }
   clusterID <- unlist(clusterID)
-  names(clusterID) <- Genome$name
+  names(clusterID) <- Genome$names
   clusterID
+}
+
+##' segment vectors into positive, null and negative
+##' 
+##' @title segmentsMaker
+##' @param cluster list of probes clusters
+##' @param beta beta value for probes
+##' @param cutoff cutoff value for positive & negative value; 
+##'        <= cutoff[1] : hypo 
+##'        >= cutoff[4] : hyper
+##'        (cutoff[2], cutoff[3]) : null
+##' @return cluster list and each cluster contains 3 list
+##'         `hyper`| `+`
+##'         `hypo` | `-`
+##'         `null` | `0`
+##' @details bumphunting kernel; and we can use comb-p method in segmentMaker.
+##' @import data.table
+##' @export
+segmentsMaker <- function(cluster, beta, cutoff){
+  cnames <- names(cluster)
+  all <- ((beta >= cutoff[4]) - (beta <= cutoff[1]) + 2 * (beta >= cutoff[2]) * (beta <= cutoff[3]))[cnames,]
+  sgn <- as.numeric(c(0, abs(diff(as.numeric(all)))) != 0)
+  splitter <- cumsum(sgn) + cluster
+  all[all == 1]  <- "hyper"
+  all[all == 2]  <- "null"
+  all[all == -1] <- "hypo"
+  all[all == 0]  <- "unknown"
+  segments <- data.table(cluster = cluster, beta = B[cnames,], status = all, segs = splitter)
+  segments <- segments[segments$status != "unknown", ]
+  segments <- plyr:::splitter_d(segments, .(status))
+  segments <- list(hyper = plyr:::splitter_d(segments[[1]], .(segs)),
+                   hypo  = plyr:::splitter_d(segments[[2]], .(segs)),
+                   null  = plyr:::splitter_d(segments[[3]], .(segs)))
+  segments
 }
 
 ##' bump hunting algorithm one clusters predefined by distance/correlation constraints
@@ -291,18 +332,23 @@ clusterMaker <- function(chr, pos, maxGap = 500, names){
 ##' @param beta vector of different probes
 ##' @param chr Chromosome vector
 ##' @param pos position numeric vector
-##' @param cluster clusters defined by arguments or \link{clusterMaker}
+##' @param cluster list clusters defined by arguments or \link{clusterMaker}
 ##' @param maxGap max gap length between 2 probes within a region ; 
 ##'        used in function \link{clusterMaker}
 ##' @param names probe names vector ; used in function \link{clusterMaker}
-##' @details if a arbitary threshold is defined, regionSeeker will return a table (within / without)
+##' @param cutoff cutoff threshold for bump selection. only segements within cluster satisfy cutoff
+##'        are returned as predicted region
+##' @details If an arbitary threshold is defined, regionSeeker will return a table (within / without)
 ##'          the threshold. In bump hunting algorithms, these contiguous probes mean bumps.
 ##' @return Table of predict regions
 ##' @export
-regionSeeker <- function(beta, chr, pos, cluster = NULL, maxGap = 500, names){
+regionSeeker <- function(beta, chr, pos, cluster = NULL, maxGap = 500, names, 
+                         cutoff = c(quantile(abs(beta), 0.9), quantile(abs(beta), 0.1))){
   if(is.null(cluster)){
     cluster <- clusterMaker(chr = chr, pos = pos, maxGap = maxGap, names = names)
   }
+  segments <- segmentsMaker(cluster = cluster, beta = beta, cutoff = c(-cutoff[1], -cutoff[2], cutoff[2], cutoff[1]))
+  
 }
 
 

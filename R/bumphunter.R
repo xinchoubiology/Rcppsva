@@ -67,11 +67,11 @@ bumphuntingEngine <- function(dat.m = NULL, design, sv.m = NULL, chr, pos, clust
   # combp  means calculate p-value or not
   if(smooth){
     if(!robust){
-      tmp    <- mlm.fit(dat.m = dat.m, design = mod, coef = 2, full = TRUE)
+      tmp   <- mlm.fit(dat.m = dat.m, design = mod, coef = 2, full = TRUE)
       beta  <- tmp$coef
       sigma <- tmp$sigma
       if(combp){
-        t    <- beta0 / tmp$stdev_unscaled / sigma0
+        t   <- beta0 / tmp$stdev_unscaled / sigma0
         p   <- pt(t, tmp$df.residuals)
       }
     }else{

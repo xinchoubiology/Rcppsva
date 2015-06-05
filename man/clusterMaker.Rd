@@ -16,7 +16,7 @@ clusterMaker(chr, pos, maxGap = 500, names)
 \item{names}{probe names vector}
 }
 \value{
-cluster list of length m(m probes). Probes within same region have same region identities list.
+cluster data.frame of length m(m probes). Probes within same region have same region identities list.
 }
 \description{
 clusterMaker function based on spatial distance
@@ -26,10 +26,11 @@ If you define the maxGap 500, so we can guarantee probes in different regions ha
          As the result, if we extend region upstream & downstream maxGap / 2, our extended regions have no overlap
 }
 \examples{
-# Location <- data.frame(IlluminaHumanMethylation450kanno.ilmn12.hg19$locations)
-# Probes <- rownames(Location)[rownames(Location) \%in\% rownames(dat.m)]
-# BED <- cbind(Location[Probes, 1:2])
-# BED <- cbind(BED, dat.m[Probes, 4:3])
-# clusters <- clusterMaker(chr = BED$chr, pos = BED$pos, maxGap = 1000, probenames = rownames(BED))
+require(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+Location <- data.frame(IlluminaHumanMethylation450kanno.ilmn12.hg19@data$Locations)
+Probes <- rownames(Location)[rownames(Location) \%in\% rownames(dat.m)]
+BED <- cbind(Location[Probes, 1:2])
+BED <- cbind(BED, dat.m[Probes, 4:3])
+cluster <- clusterMaker(chr = BED$chr, pos = BED$pos, maxGap = 1000, names = rownames(BED))
 }
 
