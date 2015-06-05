@@ -3,6 +3,7 @@
 #include <math.h>
 #include <omp.h>
 
+#define ARMA_64BIT_WORD
 #define OMP_NUM_THREADS omp_get_max_threads()
 
 // [[Rcpp::depends(RcppArmadillo)]]

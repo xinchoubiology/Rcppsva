@@ -61,6 +61,7 @@ bumphuntingEngine <- function(dat.m = NULL, design, sv.m = NULL, chr, pos, clust
   # make cluster
   if(is.null(cluster))
     cluster <- clusterMaker(chr = chr, pos = pos, maxGap = maxGap, names = rownames(dat.m))
+  
   # estimate each position coefficient profile
   # smooth means need 1/sigma as weight or not
   # robust means squeeze variance or not
@@ -106,6 +107,7 @@ bumphuntingEngine <- function(dat.m = NULL, design, sv.m = NULL, chr, pos, clust
     }
     rm(tmp)
   }
+  
   # Region search is based on :
   #           + combination-p method 
   #           + permutation method
@@ -134,7 +136,8 @@ bumphuntingEngine <- function(dat.m = NULL, design, sv.m = NULL, chr, pos, clust
       }
       rm(tmp)
     }
-    # region selection, selection sub-region based on cluster
-    
+    # smooth processing
+    # regionSeeker by a soft threshold and their null hypothesis
+    region <- regionSeeker(beta = beta, chr = chr, pos = pos, maxGap = maxGap, names = rownames(dat.m), drop = TRUE, permbeta = beta0)
   }
 }

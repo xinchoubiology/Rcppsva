@@ -4,7 +4,7 @@
 \alias{segmentsMaker}
 \title{segmentsMaker}
 \usage{
-segmentsMaker(cluster, beta, cutoff, chr, pos)
+segmentsMaker(cluster, beta, cutoff, chr, pos, permbeta)
 }
 \arguments{
 \item{cluster}{list of probes clusters}
@@ -19,6 +19,8 @@ segmentsMaker(cluster, beta, cutoff, chr, pos)
 \item{chr}{chromosome vector}
 
 \item{pos}{position vector}
+
+\item{permbeta}{null hypothesis distribution}
 }
 \value{
 cluster list and each cluster contains 3 list

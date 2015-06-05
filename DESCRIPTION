@@ -1,6 +1,6 @@
 Package: Rcppsva
 Title: Rcpp based Surrogate Variable Analysis
-Version: 0.1.1
+Version: 0.1.2
 Author: Jeffrey T. Leek <jtleek@gmail.com>, W. Evan Johnson <wej@bu.edu>,
     Hilary S. Parker <hiparker@jhsph.edu>, Elana J. Fertig <ejfertig@jhmi.edu>,
     Andrew E. Jaffe <ajaffe@jhsph.edu>, John D. Storey <jstorey@princeton.edu>,
@@ -30,7 +30,7 @@ Maintainer: Xin Zhou <xinchoubiology@gmail.com>
 License: Artistic-2.0
 LazyData: TRUE
 Depends: R (>= 2.8), mgcv, genefilter, fastICA, qvalue, limma, foreach, plyr, doMC, 
-         GenomicRanges, IRanges, data.table
+         GenomicRanges, IRanges, data.table, stringr
 Suggests: limma, pamr, bladderbatch, BiocStyle,
           testthat, IlluminaHumanMethylation450kanno.ilmn12.hg19
 Imports:
