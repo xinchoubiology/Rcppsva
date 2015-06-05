@@ -5,7 +5,7 @@
 \title{regionSeeker}
 \usage{
 regionSeeker(beta, chr, pos, cluster = NULL, maxGap = 500, names,
-  cutoff = quantile(abs(beta), 0.9))
+  cutoff = c(quantile(abs(beta), 0.9), quantile(abs(beta), 0.1)))
 }
 \arguments{
 \item{beta}{vector of different probes}
@@ -22,7 +22,7 @@ used in function \link{clusterMaker}}
 \item{names}{probe names vector ; used in function \link{clusterMaker}}
 
 \item{cutoff}{cutoff threshold for bump selection. only segements within cluster satisfy cutoff
-are returned as predicted region}
+are returned as predicted region c(sig-cutoff, null-cutoff)}
 }
 \value{
 Table of predict regions

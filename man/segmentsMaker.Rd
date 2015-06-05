@@ -4,7 +4,7 @@
 \alias{segmentsMaker}
 \title{segmentsMaker}
 \usage{
-segmentsMaker(cluster, beta, cutoff)
+segmentsMaker(cluster, beta, cutoff, chr, pos)
 }
 \arguments{
 \item{cluster}{list of probes clusters}
@@ -13,8 +13,12 @@ segmentsMaker(cluster, beta, cutoff)
 
 \item{cutoff}{cutoff value for positive & negative value;
 <= cutoff[1] : hypo
->= cutoff[2] : hyper
-(cutoff[1], cutoff[2]) : null}
+>= cutoff[4] : hyper
+(cutoff[2], cutoff[3]) : null}
+
+\item{chr}{chromosome vector}
+
+\item{pos}{position vector}
 }
 \value{
 cluster list and each cluster contains 3 list

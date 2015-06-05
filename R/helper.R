@@ -297,6 +297,8 @@ clusterMaker <- function(chr, pos, maxGap = 500, names){
 ##' @title segmentsMaker
 ##' @param cluster list of probes clusters
 ##' @param beta beta value for probes
+##' @param chr chromosome vector
+##' @param pos position vector
 ##' @param cutoff cutoff value for positive & negative value; 
 ##'        <= cutoff[1] : hypo 
 ##'        >= cutoff[4] : hyper
@@ -308,7 +310,7 @@ clusterMaker <- function(chr, pos, maxGap = 500, names){
 ##' @details bumphunting kernel; and we can use comb-p method in segmentMaker.
 ##' @import data.table
 ##' @export
-segmentsMaker <- function(cluster, beta, cutoff){
+segmentsMaker <- function(cluster, beta, cutoff, chr, pos){
   cnames <- names(cluster)
   all <- ((beta >= cutoff[4]) - (beta <= cutoff[1]) + 2 * (beta >= cutoff[2]) * (beta <= cutoff[3]))[cnames,]
   sgn <- as.numeric(c(0, abs(diff(as.numeric(all)))) != 0)
@@ -317,7 +319,7 @@ segmentsMaker <- function(cluster, beta, cutoff){
   all[all == 2]  <- "null"
   all[all == -1] <- "hypo"
   all[all == 0]  <- "unknown"
-  segments <- data.table(cluster = cluster, beta = B[cnames,], status = all, segs = splitter)
+  segments <- data.table(names = cnames, cluster = cluster, beta = beta[cnames,], status = all, segs = splitter, chr = chr, pos = pos)
   segments <- segments[segments$status != "unknown", ]
   segments <- plyr:::splitter_d(segments, .(status))
   segments <- list(hyper = plyr:::splitter_d(segments[[1]], .(segs)),
@@ -337,9 +339,11 @@ segmentsMaker <- function(cluster, beta, cutoff){
 ##'        used in function \link{clusterMaker}
 ##' @param names probe names vector ; used in function \link{clusterMaker}
 ##' @param cutoff cutoff threshold for bump selection. only segements within cluster satisfy cutoff
-##'        are returned as predicted region
+##'        are returned as predicted region c(sig-cutoff, null-cutoff)
 ##' @details If an arbitary threshold is defined, regionSeeker will return a table (within / without)
 ##'          the threshold. In bump hunting algorithms, these contiguous probes mean bumps.
+##' @import GenomicRanges
+##' @import data.table
 ##' @return Table of predict regions
 ##' @export
 regionSeeker <- function(beta, chr, pos, cluster = NULL, maxGap = 500, names, 
@@ -347,8 +351,27 @@ regionSeeker <- function(beta, chr, pos, cluster = NULL, maxGap = 500, names,
   if(is.null(cluster)){
     cluster <- clusterMaker(chr = chr, pos = pos, maxGap = maxGap, names = names)
   }
-  segments <- segmentsMaker(cluster = cluster, beta = beta, cutoff = c(-cutoff[1], -cutoff[2], cutoff[2], cutoff[1]))
+  genome     <- GRanges(seqnames = chr, ranges = IRanges::IRanges(start = pos, width = 1), names = names, chr = chr)
+  seqlevels(genome) <- sort(seqlevels(genome))
+  genome     <- sort(genome)
   
+  segments <- segmentsMaker(cluster = cluster, beta = beta, 
+                            cutoff = c(-cutoff[1], -cutoff[2], cutoff[2], cutoff[1]),
+                            chr = genome$chr,
+                            pos = start(genome))
+    
+  res <- vector("list", 3)
+  for(i in 1:3){
+    res[[i]] <- data.table(chr   = sapply(segments[[i]], function(ix) ix[1,6]),
+                           start = sapply(segments[[i]], function(ix) min(ix[,7])),
+                           end   = sapply(segments[[i]], function(ix) max(ix[,7]) + 1),
+                           value = sapply(segments[[i]], function(ix) mean(ix[,3])),
+                           area  = sapply(segments[[i]], function(ix) abs(sum(ix[,3]))),
+                           cluster = sapply(segments[[i]], function(ix) ix[1,2]),
+                           L     = sapply(segments[[i]], function(ix) nrow(ix)))
+  }
+  names(res) <- names(segments)
+  return(res)
 }
 
 
