@@ -111,3 +111,65 @@ sim.data <- function(){
   res <- topTable(fit, coef = 4)
   res_n <- topTable(fit_n, coef = 2)
 }
+
+## if we wish to use the wilcoxon rank sum test
+## if pdata has person pairs and status information, we can use split to 
+## Wilcoxon fit has bugs
+paired.v <- split(pd, pd$person)
+paired.v <- lapply(paired.v, function(x) return(x[order(x$status),]))
+mset.Delta <- mset.ComBat[,sapply(paired.v, function(x) rownames(x[which(x$status == "cancer"),]))] - mset.ComBat[,sapply(paired.v, function(x) rownames(x[which(x$status == "normal"),]))]
+mset.DMP.wilcox <- wilcox.fit(dat.m = mset.Delta, alternative = "two.sided", qvalue0 = 0.1)
+
+## create modified p-value data frame
+mset.limma <- list(table = rbind(mset.DMP.limma$siggene, mset.DMP.limma$null))
+class(mset.limma) <- "bed"
+require(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+data(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+print(dat.m = mset.limma, bed = "siggene.bed", db = IlluminaHumanMethylation450kanno.ilmn12.hg19)
+
+## comb-p pipeline --seed 0.01 --dist 1000 --acf-dist 1:1000:50 --step 1000 -p out.prefix siggene.bed
+modsv <- cbind(mod, sv = mset.SV$sv)
+tmp <- mlm.fit(dat.m = mset.ComBat[1:10,], design = modsv, coef = 2, B = NULL, full = TRUE)
+tmp <- bootstrap.fit(dat.m = mset.ComBat[1:10,], design = modsv, coef = 2, B = 100)
+
+## test bump hunting kernel
+Location <- data.frame(IlluminaHumanMethylation450kanno.ilmn12.hg19@data$Locations)
+Probes <- rownames(Location)[rownames(Location) %in% rownames(dat.m)]
+BED <- cbind(Location[Probes, 1:2])
+BED <- cbind(BED, dat.m[Probes, 4:3])
+## elapsed ~ 1.345 secs
+cluster <- clusterMaker(chr = BED$chr, pos = BED$pos, maxGap = 1000, names = rownames(BED))
+
+tmp <- mlm.fit(dat.m = mset.ComBat, design = modsv, coef = 2, B = NULL, full = TRUE)
+## Segment extract from predefined regions
+## Test segmentMaker
+B <- tmp$coef
+cutoff <- c(-quantile(abs(B), 0.8), -quantile(abs(B), 0.2), quantile(abs(B), 0.2), quantile(B, 0.8))
+
+## CpG information
+genome     <- GRanges(seqnames = BED$chr, ranges = IRanges::IRanges(start = BED$pos, width = 1), 
+                      names = rownames(BED), chr = BED$chr)
+
+seqlevels(genome) <- sort(seqlevels(genome))
+genome     <- sort(genome)
+
+## elapsed ~ 1.160 secs
+segment.set <- segmentsMaker(cluster, B, cutoff, genome$chr, start(genome))
+
+## regionSeeker
+## elapsed of regionSeeker : 96.543 secs
+B <- tmp$coef
+cutoff = c(quantile(abs(B), 0.8), quantile(abs(B), 0.2))
+regions <- regionSeeker(beta = B, chr = BED$chr, pos = BED$pos, maxGap = 1000, names = rownames(BED), drop = TRUE)
+
+## permutation
+## elapsed = 20.058 secs
+tmp <- bootstrap.fit(dat.m = mset.ComBat, design = modsv, coef = 2, B = 100)
+permB   <- tmp$coef
+
+## 
+cutoff <- c(-quantile(abs(B), 0.8), -quantile(abs(B), 0.2), quantile(abs(B), 0.2), quantile(B, 0.8))
+segment_perm <- segmentsMaker(cluster, B, cutoff, genome$chr, start(genome), permB)
+
+regions_perm <- regionSeeker(beta = B, chr = BED$chr, pos = BED$pos, maxGap = 1000, permbeta = permB, names = rownames(BED), drop = TRUE)
+
