@@ -139,5 +139,7 @@ bumphuntingEngine <- function(dat.m = NULL, design, sv.m = NULL, chr, pos, clust
     # smooth processing
     # regionSeeker by a soft threshold and their null hypothesis
     region <- regionSeeker(beta = beta, chr = chr, pos = pos, maxGap = maxGap, names = rownames(dat.m), drop = TRUE, permbeta = beta0)
+  } else if(combp){
+    
   }
 }
