@@ -72,7 +72,7 @@ bumphuntingEngine <- function(dat.m = NULL, design, sv.m = NULL, chr, pos, clust
       beta  <- tmp$coef
       sigma <- tmp$sigma
       if(combp){
-        t   <- beta0 / tmp$stdev_unscaled / sigma0
+        t   <- beta / sigma
         p   <- pt(t, tmp$df.residuals)
       }
     }else{
@@ -88,18 +88,18 @@ bumphuntingEngine <- function(dat.m = NULL, design, sv.m = NULL, chr, pos, clust
     rm(tmp)
   }else{
     if(!robust){
-      tmp <- mlm.fit(dat.m = dat.m, design = mod, coef = 2, full = TRUE)
+      tmp   <- mlm.fit(dat.m = dat.m, design = mod, coef = 2, full = TRUE)
       beta  <- tmp$coef
       sigma <- NULL
       if(combp){
-        t    <- beta0 / tmp$stdev_unscaled / sigma0
+        t   <- beta / sigma
         p   <- pt(t, tmp$df.residuals)
       }
     }else{
-      tmp    <- lmFit(dat.m, mod)
+      tmp   <- lmFit(dat.m, mod)
       contrasts <- cbind("C-N" = c(0, 1, rep(0, ncol(mod) - 2)))
-      tmp    <- contrasts.fit(tmp, contrasts)
-      tmp    <- eBayes(tmp)
+      tmp   <- contrasts.fit(tmp, contrasts)
+      tmp   <- eBayes(tmp)
       beta  <- tmp$coefficients
       sigma <- NULL
       if(combp)
@@ -136,7 +136,7 @@ bumphuntingEngine <- function(dat.m = NULL, design, sv.m = NULL, chr, pos, clust
       }
       rm(tmp)
     }
-    # smooth processing
+    # smooth processing will use the sigma
     # regionSeeker by a soft threshold and their null hypothesis
     region <- regionSeeker(beta = beta, chr = chr, pos = pos, maxGap = maxGap, names = rownames(dat.m), drop = TRUE, permbeta = beta0)
   } else if(combp){
