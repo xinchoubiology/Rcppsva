@@ -118,6 +118,11 @@ mlm.fit <- function(dat.m = NULL, design = NULL, coef = 2, B = NULL, full = FALS
   if(!is.null(rownames(dat.m))){
     rownames(result$coef) <- rownames(result$sigma) <- rownames(dat.m)
   }
+  ## normalized by stdev_unscaled
+  if(!is.null(B) && B >= 2){
+    result$coef <- t(apply(result$coef, 1, '/', t(result$stdev_unscaled)))
+    result$stdev_unscaled <- NULL
+  }
   result
 }
 
@@ -139,7 +144,7 @@ bootstrap.fit <- function(dat.m = NULL, design = NULL, coef = 2, B = NULL){
   xperm <- if(is.null(B)){
     matrix(1:ncol(dat.m), ncol = 1)
   }else{
-    replicate(B, sample(1:ncol(dat.m), replace = TRUE))
+    replicate(B, sample(1:ncol(dat.m), replace = TRUE), simplify=TRUE) - 1
   }
   result <- bootstrap_regress(M = dat.m, mod = mod, modn = mod0, B = xperm)
   if(!is.null(rownames(dat.m))){
@@ -159,10 +164,7 @@ bootstrap.fit <- function(dat.m = NULL, design = NULL, coef = 2, B = NULL){
 mlm.tstat <- function(fit){
   s2 <- apply(fit$sigma^2, 2, limma::squeezeVar, fit$df.residuals)
   B  <- ncol(fit$coef)
-  if("stdev_unscaled" %in% names(fit))
-    t  <- lapply(1:B, function(i) fit$coef[,i] / fit$stdev_unscaled[i] / sqrt(s2[[i]]$var.post))
-  else
-    t  <- lapply(1:B, function(i) fit$coef[,i] / sqrt(s2[[i]]$var.post))
+  t  <- lapply(1:B, function(i) fit$coef[,i] / sqrt(s2[[i]]$var.post))
   
   df.total <- fit$df.residuals + sapply(s2, "[[", "df.prior")
   post.sigma <- sqrt(do.call(cbind, lapply(s2, "[[", "var.post")))

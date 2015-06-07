@@ -8,6 +8,6 @@ Rcpp Integration Surrogate Variable Analysis and Rewrite by RcppEigen and RcppGS
 
 > sum(abs(sum(ix[,3])) >= abs(colSums(ix[,-(1:7)])))/ L -> sum(abs(sum(ix[,3])) <= abs(colSums(ix[,-(1:7)])))/ L
 
-+ @Jun, 5. Bugs occur in bootstrap test method [**]
++ @Jun, 5. Bugs corrected in bootstrap test method 
 
-+ 
++ @Jun, 6. Comb-p method added
