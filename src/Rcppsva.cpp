@@ -1,6 +1,7 @@
 #include <RcppArmadillo.h>
 #include <RcppEigen.h>
 #include <math.h>
+#include <vector>
 #include <omp.h>
 
 #define ARMA_64BIT_WORD
@@ -151,10 +152,66 @@ Rcpp::List bootstrap_regress(const arma::mat & M, const arma::mat & mod, const a
                             Rcpp::Named("df.residuals") = df);
 }
 
-//' Parallelized Dbp_merge for each candidate classes
-//' 
-//' @title Dbp_merge
-//' @param M List of Clusters under distance constraints
-//' @param type numeric for linkage type {0:single, 1:complete, 2:average}
-//' @param cutoff numeric for merge threshold
-//' @return 
+
+//' Parallel Computing measurement matrix for different linkage type : single linkage
+//' @title singleLinkage
+//' @param M correlation matrix
+//' @return Matrix
+//' @export
+//  [[Rcpp::export]]
+arma::mat singleLinkage(arma::mat & M){
+  arma::mat N = M;
+  for(unsigned i = 0; i < N.n_rows; i++){
+    for(unsigned j = i+2; j < N.n_cols; j++){
+      N(i, j) = Rcpp::min(Rcpp::NumericVector::create(N(i, j-1), N(i+1,j), N(i,j)));
+    }
+  }
+  return N;
+}
+
+
+//' Parallel Computing measurement matrix for different linkage type : complete linkage
+//' @title completeLinkage
+//' @param M correlation matrix
+//' @return Matrix
+//' @export
+//  [[Rcpp::export]]
+arma::mat completeLinkage(arma::mat & M){
+  arma::mat N = M;
+  for(unsigned i = 0; i < N.n_rows; i++){
+    for(unsigned j = i+2; j < N.n_cols; j++){
+      N(i, j) = Rcpp::max(Rcpp::NumericVector::create(N(i, j-1), N(i+1,j), N(i,j)));
+    }
+  }
+  return N;
+}
+
+
+//' Parallel Computing measurement matrix for different linkage type : average linkages
+//' @title averageLinkage
+//' @param M correlation matrix
+//' @return Matrix
+//' @export
+//  [[Rcpp::export]]
+arma::mat averageLinkage(arma::mat & M){
+  arma::mat N = M;
+  for(unsigned i = 0; i < N.n_rows; i++){
+    for(unsigned j = i+2; j < N.n_cols; j++){
+      N(i, j) += N(i, j-1);
+      for(unsigned k = i+1; k < j; k++){
+        N(i, j) += N(k, j);
+      }
+    }
+  }
+  
+  #pragma omp parallel for num_threads(OMP_NUM_THREADS)
+  for(unsigned i = 0; i < N.n_rows; i++){
+    for(unsigned j = i+2; j < M.n_cols; j++){
+      N(i, j) /= ((j - i) * (j - i + 1) / 2);
+    }
+  }
+  return N;
+}
+
+
+

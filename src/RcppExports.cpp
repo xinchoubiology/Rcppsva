@@ -59,3 +59,36 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// singleLinkage
+arma::mat singleLinkage(arma::mat& M);
+RcppExport SEXP Rcppsva_singleLinkage(SEXP MSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< arma::mat& >::type M(MSEXP);
+    __result = Rcpp::wrap(singleLinkage(M));
+    return __result;
+END_RCPP
+}
+// completeLinkage
+arma::mat completeLinkage(arma::mat& M);
+RcppExport SEXP Rcppsva_completeLinkage(SEXP MSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< arma::mat& >::type M(MSEXP);
+    __result = Rcpp::wrap(completeLinkage(M));
+    return __result;
+END_RCPP
+}
+// averageLinkage
+arma::mat averageLinkage(arma::mat& M);
+RcppExport SEXP Rcppsva_averageLinkage(SEXP MSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< arma::mat& >::type M(MSEXP);
+    __result = Rcpp::wrap(averageLinkage(M));
+    return __result;
+END_RCPP
+}

@@ -53,3 +53,30 @@ bootstrap_regress <- function(M, mod, modn, B) {
     .Call('Rcppsva_bootstrap_regress', PACKAGE = 'Rcppsva', M, mod, modn, B)
 }
 
+#' Parallel Computing measurement matrix for different linkage type : single linkage
+#' @title singleLinkage
+#' @param M correlation matrix
+#' @return Matrix
+#' @export
+singleLinkage <- function(M) {
+    .Call('Rcppsva_singleLinkage', PACKAGE = 'Rcppsva', M)
+}
+
+#' Parallel Computing measurement matrix for different linkage type : complete linkage
+#' @title completeLinkage
+#' @param M correlation matrix
+#' @return Matrix
+#' @export
+completeLinkage <- function(M) {
+    .Call('Rcppsva_completeLinkage', PACKAGE = 'Rcppsva', M)
+}
+
+#' Parallel Computing measurement matrix for different linkage type : average linkages
+#' @title averageLinkage
+#' @param M correlation matrix
+#' @return Matrix
+#' @export
+averageLinkage <- function(M) {
+    .Call('Rcppsva_averageLinkage', PACKAGE = 'Rcppsva', M)
+}
+

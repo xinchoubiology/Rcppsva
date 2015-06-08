@@ -327,40 +327,20 @@ corrclusterMaker <- function(dat.m = NULL, chr, pos, cluster = NULL,
 Dbpmerge <- function(c.mat = NULL, merge = c("single", "complete", "average"), cutoff = 0.8){
   merge <- match.arg(merge)
   corrClust <- llply(c.mat, .fun = function(mx){
-                                    probe   <- colnames(mx)
-                                    id      <- rep(1, length(probe))
-                                    cluster <- c(1)
-                                    cindex  <- 1
-                                    if(merge == 'single'){
-                                      for(i in 2:length(probe)){
-                                        if(all(mx[i,cluster[cindex]:(i-1)] < cutoff)){
-                                          cindex <- cindex + 1
-                                          cluster <- c(cluster, i)
-                                        }
-                                        id[i] <- cindex
-                                      }
-                                    }else if(merge == "complete"){
-                                      for(i in 2:length(probe)){
-                                        if(any(mx[i,cluster[cindex]:(i-1)] < cutoff)){
-                                          cindex <- cindex + 1
-                                          cluster <- c(cluster, i)
-                                        }
-                                        id[i] <- cindex
-                                      }
-                                    }else{
-                                      for(i in 2:length(probe)){
-                                        if(mean(mx[i,cluster[cindex]:(i-1)]) < cutoff){
-                                          cindex <- cindex + 1
-                                          cluster <- c(cluster, i)
-                                        }
-                                        id[i] <- cindex
-                                      }
-                                    }
-                                    clusters <- split(probe, id)
-                                    clusters
+                                    pname <- rownames(mx)
+                                    diag(mx) <- 0
+                                    mx <- switch(merge, single   = singleLinkage(mx),
+                                                        complete = completeLinkage(mx),
+                                                        average  = averageLinkage(mx))
+                                    mx <- (mx >= cutoff)
+                                    cIndexes <- rep(1, dim(mx)[1])
+                                    cIndexes <- Index.merge(mx, cIndexes);
+                                    split(pname, cIndexes)
                                    })
   unlist(corrClust, recursive = FALSE)
 }
+
+
 
 ##' segment vectors into positive, null and negative
 ##' 
@@ -488,5 +468,33 @@ Index.NA <- function(mat, by = c("row", "col")){
     unique(which(is.na(mat)) %% ncol(mat))
   }
 }
+
+##' recursive merge Index
+##' @title Index.merge
+##' @param mat
+##' @parma index
+Index.merge <- function(mat, index){
+  n <- dim(mat)[1]
+  if(n == 2){
+    if(mat[1,2] == 1)
+      return(index)
+    else
+      return(c(index[1], index[2]+1))
+  }else{
+    if(mat[1,ncol(mat)] == 1)
+      return(index)
+    else{
+      return(CON(Index.merge(mat[1:(n-1),1:(n-1)], index[1:n-1]), Index.merge(mat[2:n,2:n], index[2:n]+1)))
+    }
+  }
+}
+
+##' merge two overlapped region
+##' @title CON
+##' @param x,y vector
+CON <- function(x, y){
+  c(x[1:length(x)-1], min(x[-1], y[1]), y[-1])
+}
+
 
 
