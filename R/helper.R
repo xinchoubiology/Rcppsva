@@ -327,12 +327,12 @@ corrclusterMaker <- function(dat.m = NULL, chr, pos, cluster = NULL,
 Dbpmerge <- function(c.mat = NULL, merge = c("single", "complete", "average"), cutoff = 0.8){
   merge <- match.arg(merge)
   corrClust <- llply(c.mat, .fun = function(mx){
-                                    probe  <- colnames(mx)
+                                    probe   <- colnames(mx)
                                     id      <- rep(1, length(probe))
                                     cluster <- c(1)
                                     cindex  <- 1
                                     if(merge == 'single'){
-                                      for(i in 2 : length(probe)){
+                                      for(i in 2:length(probe)){
                                         if(all(mx[i,cluster[cindex]:(i-1)] < cutoff)){
                                           cindex <- cindex + 1
                                           cluster <- c(cluster, i)
@@ -340,7 +340,7 @@ Dbpmerge <- function(c.mat = NULL, merge = c("single", "complete", "average"), c
                                         id[i] <- cindex
                                       }
                                     }else if(merge == "complete"){
-                                      for(i in 2 : length(probe)){
+                                      for(i in 2:length(probe)){
                                         if(any(mx[i,cluster[cindex]:(i-1)] < cutoff)){
                                           cindex <- cindex + 1
                                           cluster <- c(cluster, i)
@@ -348,7 +348,7 @@ Dbpmerge <- function(c.mat = NULL, merge = c("single", "complete", "average"), c
                                         id[i] <- cindex
                                       }
                                     }else{
-                                      for(i in 2 : length(probe)){
+                                      for(i in 2:length(probe)){
                                         if(mean(mx[i,cluster[cindex]:(i-1)]) < cutoff){
                                           cindex <- cindex + 1
                                           cluster <- c(cluster, i)
