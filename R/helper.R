@@ -305,7 +305,7 @@ corrclusterMaker <- function(dat.m = NULL, chr, pos, cluster = NULL,
   
   ## build correlation matrix within clusters
   corrMat   <- llply(multClust, .fun = function(ix){
-                                        dist <- abs(pos[ix] %--% pos[ix])
+                                        dist <- abs(outer(pos[ix], pos[ix], "-"))
                                         colnames(dist) <- rownames(dist) <- ix
                                         cor(t(dat.m[ix,]), method = method) * (dist < maxGap)
                                       })
@@ -489,16 +489,4 @@ Index.NA <- function(mat, by = c("row", "col")){
   }
 }
 
-##' broadcast operation on matrix
-##' 
-##' @title Broadcast subtraction
-##' @usage x %--% y
-##' @param x numeric or complex vector 
-##' @param y numeric or complex vector
-##' @export
-`%--%` <- function(x, y){
-  xlen <- length(x)
-  ylen <- length(y)
-  replicate(ylen, x) - t(replicate(xlen, y))
-}
 

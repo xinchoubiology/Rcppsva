@@ -2,7 +2,6 @@
 
 S3method(plot,corr)
 S3method(print,bed)
-export("%--%")
 export(ComBat)
 export(Dbpmerge)
 export(arma_eigen)

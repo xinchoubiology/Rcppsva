@@ -150,3 +150,11 @@ Rcpp::List bootstrap_regress(const arma::mat & M, const arma::mat & mod, const a
                             Rcpp::Named("sigma") = sigma0,
                             Rcpp::Named("df.residuals") = df);
 }
+
+//' Parallelized Dbp_merge for each candidate classes
+//' 
+//' @title Dbp_merge
+//' @param M List of Clusters under distance constraints
+//' @param type numeric for linkage type {0:single, 1:complete, 2:average}
+//' @param cutoff numeric for merge threshold
+//' @return 

@@ -10,4 +10,6 @@ Rcpp Integration Surrogate Variable Analysis and Rewrite by RcppEigen and RcppGS
 
 + @Jun, 5. Bugs corrected in bootstrap test method 
 
-+ @Jun, 6. Comb-p method added
++ @Jun, 6. Comb-p method started
+
++ @Jun, 7. Correlation Clustering Algorithm added
