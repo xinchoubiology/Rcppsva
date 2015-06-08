@@ -272,37 +272,47 @@ clusterMaker <- function(chr, pos, maxGap = 500, names){
 ##' @description By \code{clusterMaker}, we can generate probe cluster under constraint of maximum 
 ##'              distance. Adding the correlation constraint, we will truncate exsited cluster and
 ##'              calculate their correlation matrix \code{sigma} out
-##' @title corrCluster
+##' @title corrclusterMaker
 ##' @param dat.m n x m delta M|beta matrix for n CpG sites across 2*m paired different patient samples
-##' @param cluster vector of probes clusters By distance(maxGap) constraints; Default = 0.8
-##' @param cutoff threshold to filter distance based cluster
-##' @param type output type of cluster; c("vector", "list"); Default "list"
-##' @param method correlation calculation method; c("pearson", "spearman", "kendall"); Default "spearman"
+##' @param chr Chromosome vector
+##' @param pos position numeric vector
+##' @param cluster vector of probes clusters By distance(maxGap) constraints
+##' @param names probe names vector ; used in function \link{clusterMaker}
+##' @param maxGap max gap length between 2 probes within a region ; Default = 500
+##'        also used in function \link{clusterMaker}
+##' @param cutoff threshold to filter distance based cluster; Default = 0.8
+##' @param method correlation calculation method; c("spearman", "pearson", "kendall"); Default "spearman"
 ##' @param merge how to merge two sub-clusters; c("single", "complete", "average")
 ##' @param pos CpG position with their probes id
 ##' @details only clusters contain >= 2 probes can get a corrected p-value
-##' @return list of 2 components
-##'         cluster
-##'         correlation matrix
+##' @return list of clusterID vector
 ##' @importFrom plyr llply
 ##' @export
-corrCluster <- function(dat.m = NULL, cluster, maxGap = 500, type = c("vector", "list"), 
-                        cutoff = 0.8, method = c("pearson", "spearman"), 
-                        merge = c("single", "complete", "average"), pos){
+corrclusterMaker <- function(dat.m = NULL, chr, pos, cluster = NULL, 
+                             maxGap = 500, names, cutoff = 0.8,
+                             method = c("pearson", "spearman", "kendall"), 
+                             merge = c("single", "complete", "average")){
   method <- match.arg(method)
   merge  <- match.arg(merge)
-  dat.m <- t(dat.m)
-  cnames <- names(cluster)
+  if(is.null(cluster)){
+    cluster <- clusterMaker(chr = chr, pos = pos, maxGap = maxGap, names = names)
+  }
+  cnames     <- names(cluster)
+  names(pos) <- names
   rawClust  <- split(cnames, cluster)
   combIndex <- which(sapply(rawClust, function(c) length(c) > 1))
   multClust <- rawClust[combIndex]
+  
   ## build correlation matrix within clusters
   corrMat   <- llply(multClust, .fun = function(ix){
-                                        dist <- abs(pos[ix,] %--% pos[ix,])
+                                        dist <- abs(pos[ix] %--% pos[ix])
                                         colnames(dist) <- rownames(dist) <- ix
-                                        abs(cor(t(dat.m[ix,]), method = method)) * (dist < maxGap)
+                                        cor(t(dat.m[ix,]), method = method) * (dist < maxGap)
                                       })
-  corrClust <- Dbpmerge(corrMat, merge, cutoff)
+  
+  corrClust   <- Dbpmerge(corrMat, merge, cutoff)
+  clusterID   <- c(corrClust, rawClust[-combIndex])
+  clusterID
 }
 
 ##' sub-regions merge and split
@@ -347,7 +357,9 @@ Dbpmerge <- function(c.mat = NULL, merge = c("single", "complete", "average"), c
                                       }
                                     }
                                     clusters <- split(probe, id)
+                                    clusters
                                    })
+  unlist(corrClust, recursive = FALSE)
 }
 
 ##' segment vectors into positive, null and negative

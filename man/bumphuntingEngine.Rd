@@ -5,11 +5,13 @@
 \title{bumphuntingEngine}
 \usage{
 bumphuntingEngine(dat.m = NULL, design, sv.m = NULL, chr, pos,
-  cluster = NULL, coef = 2, cutoff = NULL, pvalue = 0.01,
-  maxGap = 500, minDist = 500, nullMethod = c("permutation", "bootstrap"),
-  robust = FALSE, smooth = FALSE, smoother = bumphunter::loessByCluster,
-  B = 10000, cor = FALSE, corFunc = c("spearman", "pearson"),
-  combp = FALSE, verbose = TRUE, ...)
+  cluster = NULL, coef = 2, names, cutoff = NULL, pvalue = 0.01,
+  maxGap = 500, minDist = 500, robust = FALSE, smooth = FALSE,
+  nullMethod = c("permutation", "bootstrap"),
+  smoother = bumphunter::loessByCluster, B = 10000, cor = FALSE,
+  corFunc = c("spearman", "pearson", "kendall"), combp = FALSE,
+  merge = c("single", "complete", "average"), cor.cutoff = 0.8,
+  verbose = TRUE, ...)
 }
 \arguments{
 \item{dat.m}{450k methylation microarray matrix via preprocessing; m x n matrix}
@@ -28,6 +30,8 @@ available, clusterMaker can be used to cluster nearby locations}
 
 \item{coef}{Integer. covariate of interest's column}
 
+\item{names}{probe names vector ; used in function \link{clusterMaker} and \link{regionSeeker}}
+
 \item{cutoff}{numeric value. Value of estimates coefficient of covariate of interested above cutoff
 or below the negative of cutoff will be used as candidate bump regions.}
 
@@ -37,12 +41,12 @@ or below the negative of cutoff will be used as candidate bump regions.}
 
 \item{minDist}{if clusters are build, the mininal distance between clusters is setted as constraint}
 
-\item{nullMethod}{Method for generating null candidate regions. If ncol(design) > 2. bootstrap method is recommanded}
-
 \item{robust}{logic, use robust linear regression or not; Default FALSE}
 
 \item{smooth}{logic. If TRUE then the standard error or correlation of point-wise estimatrs will be used as weigths
 in the \code{loessByCluster}}
+
+\item{nullMethod}{Method for generating null candidate regions. If ncol(design) > 2. bootstrap method is recommanded}
 
 \item{smoother}{smooth function to estimate genome profile.}
 
@@ -55,6 +59,10 @@ which describes permutations to generate null distribution}
 \item{corFunc}{Optional; "spearman"(Default) and "pearson"}
 
 \item{combp}{logical; If TRUE then slk p correction will be applied}
+
+\item{merge}{how to merge two sub-clusters; c("single", "complete", "average")}
+
+\item{cor.cutoff}{correlation cutoff in merge algorithm}
 
 \item{verbose}{logical. Optional printing progress message or not}
 

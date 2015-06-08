@@ -24,6 +24,7 @@ setMethod("print", signature(x = "bumps"),
 ##'        perspevtive, we can use agglomerate cluster index to bump analysis. If cluster is not
 ##'        available, clusterMaker can be used to cluster nearby locations
 ##' @param coef Integer. covariate of interest's column
+##' @param names probe names vector ; used in function \link{clusterMaker} and \link{regionSeeker}
 ##' @param cutoff numeric value. Value of estimates coefficient of covariate of interested above cutoff
 ##'        or below the negative of cutoff will be used as candidate bump regions. 
 ##' @param pvalue numeric value. cutoff of pvalue for candidate regions selection
@@ -40,6 +41,8 @@ setMethod("print", signature(x = "bumps"),
 ##' @param cor logical; If TRUE then position correlation matrix is considered as weighted matrix
 ##' @param corFunc Optional; "spearman"(Default) and "pearson"
 ##' @param combp logical; If TRUE then slk p correction will be applied
+##' @param merge how to merge two sub-clusters; c("single", "complete", "average")
+##' @param cor.cutoff correlation cutoff in merge algorithm
 ##' @param verbose logical. Optional printing progress message or not
 ##' @param ...
 ##' @return bumps object
@@ -50,17 +53,19 @@ setMethod("print", signature(x = "bumps"),
 ##  # -like vector
 ##' @export
 bumphuntingEngine <- function(dat.m = NULL, design, sv.m = NULL, chr, pos, cluster = NULL, coef = 2,
-                              cutoff = NULL, pvalue = 0.01, maxGap = 500, minDist = 500,
-                              nullMethod = c("permutation", "bootstrap"), robust = FALSE,
-                              smooth = FALSE, smoother = bumphunter::loessByCluster,
-                              B = 10000, cor = FALSE, 
-                              corFunc = c("spearman", "pearson"), combp = FALSE,
+                              names, cutoff = NULL, pvalue = 0.01, maxGap = 500, minDist = 500,
+                              robust = FALSE, smooth = FALSE, nullMethod = c("permutation", "bootstrap"),
+                              smoother = bumphunter::loessByCluster, B = 10000, cor = FALSE, 
+                              corFunc = c("spearman", "pearson", "kendall"), combp = FALSE,
+                              merge = c("single", "complete", "average"), cor.cutoff = 0.8,
                               verbose = TRUE, ...){
   nullMethod <- match.arg(nullMethod)
   mod        <- cbind(design, sv.m)
+  corFunc    <- match.arg(corFunc)
+  merge      <- match.arg(merge)
   # make cluster
   if(is.null(cluster))
-    cluster <- clusterMaker(chr = chr, pos = pos, maxGap = maxGap, names = rownames(dat.m))
+    cluster <- clusterMaker(chr = chr, pos = pos, maxGap = maxGap, names = names)
   
   # estimate each position coefficient profile
   # smooth means need 1/sigma as weight or not
@@ -90,7 +95,7 @@ bumphuntingEngine <- function(dat.m = NULL, design, sv.m = NULL, chr, pos, clust
     if(!robust){
       tmp   <- mlm.fit(dat.m = dat.m, design = mod, coef = 2, full = TRUE)
       beta  <- tmp$coef
-      sigma <- NULL
+      sigma <- tmp$sigma
       if(combp){
         t   <- beta / sigma
         p   <- pt(t, tmp$df.residuals)
@@ -138,8 +143,8 @@ bumphuntingEngine <- function(dat.m = NULL, design, sv.m = NULL, chr, pos, clust
     }
     # smooth processing will use the sigma
     # regionSeeker by a soft threshold and their null hypothesis
-    region <- regionSeeker(beta = beta, chr = chr, pos = pos, maxGap = maxGap, names = rownames(dat.m), drop = TRUE, permbeta = beta0)
+    region <- regionSeeker(beta = beta, chr = chr, pos = pos, names = names, cluster = cluster, maxGap = maxGap, drop = TRUE, permbeta = beta0)
   } else if(combp){
-    
+    cluster <- corrclusterMaker(dat.m = dat.m, chr = chr, pos = pos, names = names, cluster = cluster, cutoff = cor.cutoff, maxGap = maxGap, method = corFunc, merge = merge)
   }
 }
