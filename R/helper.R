@@ -295,6 +295,7 @@ corrClust <- function(dat.m = NULL, cluster, cutoff = 0.8, type = c("vector", "l
   corrMat   <- llply(rawClust, .fun = function(ix){
                                         cor(dat.m[ix,], method = method)
                                       })
+  
 }
 
 

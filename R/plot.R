@@ -60,7 +60,8 @@ plot.corr <- function(x, y = NULL, cutoff = 0.8, ...){
   ggcor <- ggplot(mat.m, aes(row, variable)) +
             geom_tile(aes(fill=value),colour="black")  +
             scale_fill_brewer(palette = "RdYlGn",name="Correlation") + 
-            theme(axis.text.x=element_text(angle=-90)) +
+            theme(axis.text.x=element_text(angle=-90), 
+                  axis.title=element_blank()) +
             theme(panel.background=element_blank(),
                   panel.grid.minor=element_blank(),
                   panel.grid.major=element_blank())

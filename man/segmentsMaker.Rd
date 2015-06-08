@@ -7,7 +7,7 @@
 segmentsMaker(cluster, beta, cutoff, chr, pos, permbeta)
 }
 \arguments{
-\item{cluster}{list of probes clusters}
+\item{cluster}{vector of probes clusters}
 
 \item{beta}{beta value for probes}
 
