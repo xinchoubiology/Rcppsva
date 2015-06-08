@@ -272,32 +272,83 @@ clusterMaker <- function(chr, pos, maxGap = 500, names){
 ##' @description By \code{clusterMaker}, we can generate probe cluster under constraint of maximum 
 ##'              distance. Adding the correlation constraint, we will truncate exsited cluster and
 ##'              calculate their correlation matrix \code{sigma} out
-##' @title corrClust
+##' @title corrCluster
 ##' @param dat.m n x m delta M|beta matrix for n CpG sites across 2*m paired different patient samples
 ##' @param cluster vector of probes clusters By distance(maxGap) constraints; Default = 0.8
 ##' @param cutoff threshold to filter distance based cluster
 ##' @param type output type of cluster; c("vector", "list"); Default "list"
 ##' @param method correlation calculation method; c("pearson", "spearman", "kendall"); Default "spearman"
+##' @param merge how to merge two sub-clusters; c("single", "complete", "average")
+##' @param pos CpG position with their probes id
 ##' @details only clusters contain >= 2 probes can get a corrected p-value
 ##' @return list of 2 components
 ##'         cluster
 ##'         correlation matrix
 ##' @importFrom plyr llply
 ##' @export
-corrClust <- function(dat.m = NULL, cluster, cutoff = 0.8, type = c("vector", "list"), method = c("pearson", "spearman")){
+corrCluster <- function(dat.m = NULL, cluster, maxGap = 500, type = c("vector", "list"), 
+                        cutoff = 0.8, method = c("pearson", "spearman"), 
+                        merge = c("single", "complete", "average"), pos){
   method <- match.arg(method)
+  merge  <- match.arg(merge)
   dat.m <- t(dat.m)
   cnames <- names(cluster)
   rawClust  <- split(cnames, cluster)
   combIndex <- which(sapply(rawClust, function(c) length(c) > 1))
-  rawClust  <- rawClust[combIndex]
+  multClust <- rawClust[combIndex]
   ## build correlation matrix within clusters
-  corrMat   <- llply(rawClust, .fun = function(ix){
-                                        cor(dat.m[ix,], method = method)
+  corrMat   <- llply(multClust, .fun = function(ix){
+                                        dist <- abs(pos[ix,] %--% pos[ix,])
+                                        colnames(dist) <- rownames(dist) <- ix
+                                        abs(cor(t(dat.m[ix,]), method = method)) * (dist < maxGap)
                                       })
-  
+  corrClust <- Dbpmerge(corrMat, merge, cutoff)
 }
 
+##' sub-regions merge and split
+##' 
+##' @title Dbpmerge
+##' @param c.mat list of correlation probes matrices
+##' @param merge merge method; c("single", "complete", "average")
+##' @param cutoff correlation >= cutoff can be merge into a sub-regions
+##' @return list of all sub-clusters
+##' @importFrom plyr llply
+##' @export
+Dbpmerge <- function(c.mat = NULL, merge = c("single", "complete", "average"), cutoff = 0.8){
+  merge <- match.arg(merge)
+  corrClust <- llply(c.mat, .fun = function(mx){
+                                    probe  <- colnames(mx)
+                                    id      <- rep(1, length(probe))
+                                    cluster <- c(1)
+                                    cindex  <- 1
+                                    if(merge == 'single'){
+                                      for(i in 2 : length(probe)){
+                                        if(all(mx[i,cluster[cindex]:(i-1)] < cutoff)){
+                                          cindex <- cindex + 1
+                                          cluster <- c(cluster, i)
+                                        }
+                                        id[i] <- cindex
+                                      }
+                                    }else if(merge == "complete"){
+                                      for(i in 2 : length(probe)){
+                                        if(any(mx[i,cluster[cindex]:(i-1)] < cutoff)){
+                                          cindex <- cindex + 1
+                                          cluster <- c(cluster, i)
+                                        }
+                                        id[i] <- cindex
+                                      }
+                                    }else{
+                                      for(i in 2 : length(probe)){
+                                        if(mean(mx[i,cluster[cindex]:(i-1)]) < cutoff){
+                                          cindex <- cindex + 1
+                                          cluster <- c(cluster, i)
+                                        }
+                                        id[i] <- cindex
+                                      }
+                                    }
+                                    clusters <- split(probe, id)
+                                   })
+}
 
 ##' segment vectors into positive, null and negative
 ##' 
@@ -424,5 +475,18 @@ Index.NA <- function(mat, by = c("row", "col")){
   else{
     unique(which(is.na(mat)) %% ncol(mat))
   }
+}
+
+##' broadcast operation on matrix
+##' 
+##' @title Broadcast subtraction
+##' @usage x %--% y
+##' @param x numeric or complex vector 
+##' @param y numeric or complex vector
+##' @export
+`%--%` <- function(x, y){
+  xlen <- length(x)
+  ylen <- length(y)
+  replicate(ylen, x) - t(replicate(xlen, y))
 }
 
