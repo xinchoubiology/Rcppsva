@@ -493,7 +493,7 @@ Index.merge <- function(mat, index){
 ##' @title CON
 ##' @param x,y vector
 CON <- function(x, y){
-  c(x[1:length(x)-1], min(x[-1], y[1]), y[-1])
+  c(x[1], pmin(x[-1], y[-length(y)]), y[length(y)])
 }
 
 
