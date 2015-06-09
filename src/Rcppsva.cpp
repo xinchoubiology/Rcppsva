@@ -2,6 +2,7 @@
 #include <RcppEigen.h>
 #include <math.h>
 #include <vector>
+#include <string>
 #include <omp.h>
 
 #define ARMA_64BIT_WORD
@@ -9,6 +10,24 @@
 
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::depends(RcppEigen)]]
+
+enum corr_TYPE {
+  pearson,
+  spearman,
+  kendall
+};
+
+corr_TYPE parse_corr(std::string const& method){
+  if (method == "kendall"){
+    return kendall;
+  }
+  else if(method == "spearman"){
+    return spearman;
+  }
+  else{
+    return pearson;
+  }
+}
 
 //' Integrating empirical bayesian prior function
 //' by Monte Carlo integration
@@ -154,12 +173,12 @@ Rcpp::List bootstrap_regress(const arma::mat & M, const arma::mat & mod, const a
 
 
 //' Parallel Computing measurement matrix for different linkage type : single linkage
-//' @title singleLinkage
+//' @title single_linkage
 //' @param M correlation matrix
 //' @return Matrix
 //' @export
 //  [[Rcpp::export]]
-arma::mat singleLinkage(arma::mat & M){
+arma::mat single_linkage(arma::mat & M){
   arma::mat N = M;
   for(unsigned i = 0; i < N.n_rows; i++){
     for(unsigned j = i+2; j < N.n_cols; j++){
@@ -171,12 +190,12 @@ arma::mat singleLinkage(arma::mat & M){
 
 
 //' Parallel Computing measurement matrix for different linkage type : complete linkage
-//' @title completeLinkage
+//' @title complete_linkage
 //' @param M correlation matrix
 //' @return Matrix
 //' @export
 //  [[Rcpp::export]]
-arma::mat completeLinkage(arma::mat & M){
+arma::mat complete_linkage(arma::mat & M){
   arma::mat N = M;
   for(unsigned i = 0; i < N.n_rows; i++){
     for(unsigned j = i+2; j < N.n_cols; j++){
@@ -188,12 +207,12 @@ arma::mat completeLinkage(arma::mat & M){
 
 
 //' Parallel Computing measurement matrix for different linkage type : average linkages
-//' @title averageLinkage
+//' @title average_linkage
 //' @param M correlation matrix
 //' @return Matrix
 //' @export
 //  [[Rcpp::export]]
-arma::mat averageLinkage(arma::mat & M){
+arma::mat average_linkage(arma::mat & M){
   arma::mat N = M;
   for(unsigned i = 0; i < N.n_rows; i++){
     for(unsigned j = i+2; j < N.n_cols; j++){
@@ -253,5 +272,3 @@ Rcpp::NumericVector clique_merge(arma::mat M){
   
   return res;
 }
-
-

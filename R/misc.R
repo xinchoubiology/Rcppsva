@@ -284,12 +284,14 @@ clusterMaker <- function(chr, pos, maxGap = 500, names){
 ##' @param method correlation calculation method; c("spearman", "pearson", "kendall"); Default "spearman"
 ##' @param merge how to merge two sub-clusters; c("single", "complete", "average")
 ##' @param pos CpG position with their probes id
+##' @param cores number of thread used by \function{corrclusterMaker}
 ##' @details only clusters contain >= 2 probes can get a corrected p-value
 ##' @return list of clusterID vector
 ##' @importFrom plyr llply
+##' @importFrom doMC registerDoMC
 ##' @export
 corrclusterMaker <- function(dat.m = NULL, chr, pos, cluster = NULL, 
-                             maxGap = 500, names, cutoff = 0.8,
+                             maxGap = 500, names, cutoff = 0.8, cores = 2,
                              method = c("pearson", "spearman", "kendall"), 
                              merge = c("single", "complete", "average")){
   method <- match.arg(method)
@@ -304,12 +306,20 @@ corrclusterMaker <- function(dat.m = NULL, chr, pos, cluster = NULL,
   multClust <- rawClust[combIndex]
   
   ## build correlation matrix within clusters
-  corrMat   <- llply(multClust, .fun = function(ix){
-                                        dist <- abs(outer(pos[ix], pos[ix], "-"))
-                                        colnames(dist) <- rownames(dist) <- ix
-                                        cor(t(dat.m[ix,]), method = method) * (dist < maxGap)
-                                      })
-  
+  if(cores >= 2){
+    registerDoMC(cores = cores)
+    corrMat   <- llply(multClust, .fun = function(ix){
+                                           dist <- abs(outer(pos[ix], pos[ix], "-"))
+                                           colnames(dist) <- rownames(dist) <- ix
+                                           cor(t(dat.m[ix,]), method = method) * (dist < maxGap)
+                                         }, .parallel = TRUE)
+  }else{
+    corrMat   <- llply(multClust, .fun = function(ix){
+                                           dist <- abs(outer(pos[ix], pos[ix], "-"))
+                                           colnames(dist) <- rownames(dist) <- ix
+                                           cor(t(dat.m[ix,]), method = method) * (dist < maxGap)
+                                         })
+  }
   corrClust   <- Dbpmerge(corrMat, merge, cutoff)
   clusterID   <- c(corrClust, rawClust[-combIndex])
   clusterID
@@ -329,9 +339,9 @@ Dbpmerge <- function(c.mat = NULL, merge = c("single", "complete", "average"), c
   corrClust <- llply(c.mat, .fun = function(mx){
                                     pname <- rownames(mx)
                                     diag(mx) <- 0
-                                    mx <- switch(merge, single   = singleLinkage(mx),
-                                                        complete = completeLinkage(mx),
-                                                        average  = averageLinkage(mx))
+                                    mx <- switch(merge, single   = single_linkage(mx),
+                                                        complete = complete_linkage(mx),
+                                                        average  = average_linkage(mx))
                                     mx <- (mx <= cutoff) + 0.0
                                     cIndexes <- cumsum(c(1, clique_merge(mx)))
                                     split(pname, cIndexes)

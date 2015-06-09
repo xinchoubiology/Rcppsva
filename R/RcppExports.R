@@ -54,30 +54,30 @@ bootstrap_regress <- function(M, mod, modn, B) {
 }
 
 #' Parallel Computing measurement matrix for different linkage type : single linkage
-#' @title singleLinkage
+#' @title single_linkage
 #' @param M correlation matrix
 #' @return Matrix
 #' @export
-singleLinkage <- function(M) {
-    .Call('Rcppsva_singleLinkage', PACKAGE = 'Rcppsva', M)
+single_linkage <- function(M) {
+    .Call('Rcppsva_single_linkage', PACKAGE = 'Rcppsva', M)
 }
 
 #' Parallel Computing measurement matrix for different linkage type : complete linkage
-#' @title completeLinkage
+#' @title complete_linkage
 #' @param M correlation matrix
 #' @return Matrix
 #' @export
-completeLinkage <- function(M) {
-    .Call('Rcppsva_completeLinkage', PACKAGE = 'Rcppsva', M)
+complete_linkage <- function(M) {
+    .Call('Rcppsva_complete_linkage', PACKAGE = 'Rcppsva', M)
 }
 
 #' Parallel Computing measurement matrix for different linkage type : average linkages
-#' @title averageLinkage
+#' @title average_linkage
 #' @param M correlation matrix
 #' @return Matrix
 #' @export
-averageLinkage <- function(M) {
-    .Call('Rcppsva_averageLinkage', PACKAGE = 'Rcppsva', M)
+average_linkage <- function(M) {
+    .Call('Rcppsva_average_linkage', PACKAGE = 'Rcppsva', M)
 }
 
 #' Parallel clique merge by indicator matrix by prefix-product

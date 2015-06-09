@@ -59,36 +59,36 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
-// singleLinkage
-arma::mat singleLinkage(arma::mat& M);
-RcppExport SEXP Rcppsva_singleLinkage(SEXP MSEXP) {
+// single_linkage
+arma::mat single_linkage(arma::mat& M);
+RcppExport SEXP Rcppsva_single_linkage(SEXP MSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< arma::mat& >::type M(MSEXP);
-    __result = Rcpp::wrap(singleLinkage(M));
+    __result = Rcpp::wrap(single_linkage(M));
     return __result;
 END_RCPP
 }
-// completeLinkage
-arma::mat completeLinkage(arma::mat& M);
-RcppExport SEXP Rcppsva_completeLinkage(SEXP MSEXP) {
+// complete_linkage
+arma::mat complete_linkage(arma::mat& M);
+RcppExport SEXP Rcppsva_complete_linkage(SEXP MSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< arma::mat& >::type M(MSEXP);
-    __result = Rcpp::wrap(completeLinkage(M));
+    __result = Rcpp::wrap(complete_linkage(M));
     return __result;
 END_RCPP
 }
-// averageLinkage
-arma::mat averageLinkage(arma::mat& M);
-RcppExport SEXP Rcppsva_averageLinkage(SEXP MSEXP) {
+// average_linkage
+arma::mat average_linkage(arma::mat& M);
+RcppExport SEXP Rcppsva_average_linkage(SEXP MSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< arma::mat& >::type M(MSEXP);
-    __result = Rcpp::wrap(averageLinkage(M));
+    __result = Rcpp::wrap(average_linkage(M));
     return __result;
 END_RCPP
 }

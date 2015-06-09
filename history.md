@@ -13,3 +13,5 @@ Rcpp Integration Surrogate Variable Analysis and Rewrite by RcppEigen and RcppGS
 + @Jun, 6. Comb-p method started
 
 + @Jun, 7. Correlation Clustering Algorithm added
+
++ @Jun, 8. Accelerate recursive merge of region by prefix-product(Parallization)
