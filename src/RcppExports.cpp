@@ -92,3 +92,14 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// clique_merge
+Rcpp::NumericVector clique_merge(arma::mat M);
+RcppExport SEXP Rcppsva_clique_merge(SEXP MSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< arma::mat >::type M(MSEXP);
+    __result = Rcpp::wrap(clique_merge(M));
+    return __result;
+END_RCPP
+}

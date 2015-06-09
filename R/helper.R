@@ -332,9 +332,8 @@ Dbpmerge <- function(c.mat = NULL, merge = c("single", "complete", "average"), c
                                     mx <- switch(merge, single   = singleLinkage(mx),
                                                         complete = completeLinkage(mx),
                                                         average  = averageLinkage(mx))
-                                    mx <- (mx >= cutoff)
-                                    cIndexes <- rep(1, dim(mx)[1])
-                                    cIndexes <- Index.merge(mx, cIndexes);
+                                    mx <- (mx <= cutoff) + 0.0
+                                    cIndexes <- cumsum(c(1, clique_merge(mx)))
                                     split(pname, cIndexes)
                                    })
   unlist(corrClust, recursive = FALSE)
@@ -469,32 +468,6 @@ Index.NA <- function(mat, by = c("row", "col")){
   }
 }
 
-##' recursive merge Index
-##' @title Index.merge
-##' @param mat
-##' @parma index
-Index.merge <- function(mat, index){
-  n <- dim(mat)[1]
-  if(n == 2){
-    if(mat[1,2] == 1)
-      return(index)
-    else
-      return(c(index[1], index[2]+1))
-  }else{
-    if(mat[1,ncol(mat)] == 1)
-      return(index)
-    else{
-      return(CON(Index.merge(mat[1:(n-1),1:(n-1)], index[1:n-1]), Index.merge(mat[2:n,2:n], index[2:n]+1)))
-    }
-  }
-}
-
-##' merge two overlapped region
-##' @title CON
-##' @param x,y vector
-CON <- function(x, y){
-  c(x[1], pmin(x[-1], y[-length(y)]), y[length(y)])
-}
 
 
 

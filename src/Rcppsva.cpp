@@ -213,5 +213,45 @@ arma::mat averageLinkage(arma::mat & M){
   return N;
 }
 
+//' Parallel clique merge by indicator matrix by prefix-product
+//' 
+//' @title clique_merge
+//' @param M Indicator Square Matrix
+//' @return index NumericVector
+//' @export
+//  [[Rcpp::export]]
+Rcpp::NumericVector clique_merge(arma::mat M){
+  int N = M.n_cols;
+  arma::mat T(M.n_rows, M.n_cols);
+  arma::mat K(M.n_rows, M.n_cols);
+  Rcpp::NumericVector res(N - 1);
+  for(int n = N - 1; n > 1; n--){
+    for(int j = 0; j < std::log2(n - 1); j++){
+      #pragma omp parallel for num_threads(OMP_NUM_THREADS)
+      for(int i = 1<<j; i < n; i++){
+        T(N - 1 - n, n - i) = M(N - 1 - n, n - i) * M(N - 1 - n, n - i + 1);
+        K(i, n) = M(i, n) * M(i - 1, n);
+      }
+      
+      #pragma omp parallel for num_threads(OMP_NUM_THREADS)
+      for(int i = 1<<j; i < n; i++){
+        M(N - 1 - n, n - i) = T(N - 1 - n, n - i);
+        M(i, n) = K(i, n);
+      }
+    }
+    #pragma omp parallel for num_threads(OMP_NUM_THREADS)
+    for(int k = N - n + 1; k < n; k++){
+      M(N - n, k) *= M(N - 1 - n, k);
+      M(N - k, n - 1) *= M(N - k, n);
+    }
+  }
+
+  #pragma omp parallel for num_threads(OMP_NUM_THREADS)
+  for(int i = 0; i < N - 1; i++){
+    res[i] = M(i, i + 1);
+  }
+  
+  return res;
+}
 
 

@@ -80,3 +80,13 @@ averageLinkage <- function(M) {
     .Call('Rcppsva_averageLinkage', PACKAGE = 'Rcppsva', M)
 }
 
+#' Parallel clique merge by indicator matrix by prefix-product
+#' 
+#' @title clique_merge
+#' @param M Indicator Square Matrix
+#' @return index NumericVector
+#' @export
+clique_merge <- function(M) {
+    .Call('Rcppsva_clique_merge', PACKAGE = 'Rcppsva', M)
+}
+
