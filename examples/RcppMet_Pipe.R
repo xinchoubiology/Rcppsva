@@ -173,3 +173,35 @@ segment_perm <- segmentsMaker(cluster, B, cutoff, genome$chr, start(genome), per
 
 regions_perm <- regionSeeker(beta = B, chr = BED$chr, pos = BED$pos, maxGap = 1000, permbeta = permB, names = rownames(BED), drop = TRUE)
 
+
+##########################################################
+## correlated regions extracted && test Dbpmerge function
+##########################################################
+rawCluster <- split(names(cluster), cluster)
+combIndex <- which(sapply(rawCluster, function(c) length(c) > 1))
+multClust <- rawCluster[combIndex]
+pos <- BED[,2]
+names(pos) <- rownames(BED)
+
+## corrmatrix calculation too slow
+registerDoMC(cores = 4)
+corrmatrix  <- llply(multClust, .fun = function(ix){
+  dist <- abs(outer(pos[ix], pos[ix], "-"))
+  colnames(dist) <- rownames(dist) <- ix
+  cor(t(mset.ComBat[ix,]), method = "spearman") * (dist <= 1000)
+}, .parallel = TRUE)
+
+## cluster by Dbpmerge
+corregions <- Dbpmerge(corrmatrix, merge = "average", cutoff = 0.8)
+## plot
+corrmat <- list(cor = corrmatrix[[17]])
+class(corrmat) <- "corr"
+plot(corrmat, cutoff = 0.8)
+
+## build correlated clusters
+## for 1/4 probes ~ 403 secs => all probes 1600 secs
+idx <- rownames(mset.ComBat)
+system.time(corrcluster <<- corrclusterMaker(dat.m = mset.ComBat, chr = BED[idx,]$chr, pos = BED[idx,]$pos, names = rownames(BED[idx,]), maxGap = 1000, cutoff = 0.7, merge = "average", method = "spearman"))
+## corrcluster <- corrclusterMaker(dat.m = mset.ComBat, chr = BED$chr, pos = BED$pos, names = rownames(BED), maxGap = 1000, cutoff = 0.8, merge = "average", method = "spearman")
+
+

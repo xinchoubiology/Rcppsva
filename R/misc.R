@@ -284,7 +284,7 @@ clusterMaker <- function(chr, pos, maxGap = 500, names){
 ##' @param method correlation calculation method; c("spearman", "pearson", "kendall"); Default "spearman"
 ##' @param merge how to merge two sub-clusters; c("single", "complete", "average")
 ##' @param pos CpG position with their probes id
-##' @param cores number of thread used by \function{corrclusterMaker}
+##' @param cores number of thread used by \link{corrclusterMaker}
 ##' @details only clusters contain >= 2 probes can get a corrected p-value
 ##' @return list of clusterID vector
 ##' @importFrom plyr llply
@@ -310,7 +310,7 @@ corrclusterMaker <- function(dat.m = NULL, chr, pos, cluster = NULL,
     registerDoMC(cores = cores)
     corrMat   <- llply(multClust, .fun = function(ix){
                                            dist <- abs(outer(pos[ix], pos[ix], "-"))
-                                           colnames(dist) <- rownames(dist) <- ix
+                                           # colnames(dist) <- rownames(dist) <- ix
                                            cor(t(dat.m[ix,]), method = method) * (dist < maxGap)
                                          }, .parallel = TRUE)
   }else{

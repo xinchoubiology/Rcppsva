@@ -38,11 +38,12 @@ setMethod("print", signature(x = "bumps"),
 ##' @param B integer; Denoting the number of resamples to computr null distribution. Default = 0
 ##'        B is used to generate permutation matrix, 
 ##'        which describes permutations to generate null distribution
-##' @param cor logical; If TRUE then position correlation matrix is considered as weighted matrix
+##' @param corr logical; If TRUE then position correlation matrix is considered as weighted matrix
+##'        and clusters modified by correlation constraint; Default FALSE
 ##' @param corFunc Optional; "spearman"(Default) and "pearson"
 ##' @param combp logical; If TRUE then slk p correction will be applied
 ##' @param merge how to merge two sub-clusters; c("single", "complete", "average")
-##' @param cor.cutoff correlation cutoff in merge algorithm
+##' @param corr.cutoff correlation cutoff in merge algorithm
 ##' @param verbose logical. Optional printing progress message or not
 ##' @param ...
 ##' @return bumps object
@@ -55,9 +56,9 @@ setMethod("print", signature(x = "bumps"),
 bumphuntingEngine <- function(dat.m = NULL, design, sv.m = NULL, chr, pos, cluster = NULL, coef = 2,
                               names, cutoff = NULL, pvalue = 0.01, maxGap = 500, minDist = 500,
                               robust = FALSE, smooth = FALSE, nullMethod = c("permutation", "bootstrap"),
-                              smoother = bumphunter::loessByCluster, B = 10000, cor = FALSE, 
+                              smoother = bumphunter::loessByCluster, B = 10000, corr = FALSE, 
                               corFunc = c("spearman", "pearson", "kendall"), combp = FALSE,
-                              merge = c("single", "complete", "average"), cor.cutoff = 0.8,
+                              merge = c("single", "complete", "average"), corr.cutoff = 0.8,
                               verbose = TRUE, ...){
   nullMethod <- match.arg(nullMethod)
   mod        <- cbind(design, sv.m)
@@ -66,7 +67,10 @@ bumphuntingEngine <- function(dat.m = NULL, design, sv.m = NULL, chr, pos, clust
   # make cluster
   if(is.null(cluster))
     cluster <- clusterMaker(chr = chr, pos = pos, maxGap = maxGap, names = names)
-  
+  # make correlated cluster or not
+  if(corr){
+    cluster <- corrclusterMaker(dat.m = dat.m, chr = chr, pos = pos, names = names, cluster = cluster, cutoff = cor.cutoff, maxGap = maxGap, method = corFunc, merge = merge)
+  }
   # estimate each position coefficient profile
   # smooth means need 1/sigma as weight or not
   # robust means squeeze variance or not
@@ -145,6 +149,6 @@ bumphuntingEngine <- function(dat.m = NULL, design, sv.m = NULL, chr, pos, clust
     # regionSeeker by a soft threshold and their null hypothesis
     region <- regionSeeker(beta = beta, chr = chr, pos = pos, names = names, cluster = cluster, maxGap = maxGap, drop = TRUE, permbeta = beta0)
   } else if(combp){
-    cluster <- corrclusterMaker(dat.m = dat.m, chr = chr, pos = pos, names = names, cluster = cluster, cutoff = cor.cutoff, maxGap = maxGap, method = corFunc, merge = merge)
+    
   }
 }

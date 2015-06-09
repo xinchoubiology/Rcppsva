@@ -24,7 +24,7 @@ also used in function \link{clusterMaker}}
 
 \item{cutoff}{threshold to filter distance based cluster; Default = 0.8}
 
-\item{cores}{number of thread used by \function{corrclusterMaker}}
+\item{cores}{number of thread used by \link{corrclusterMaker}}
 
 \item{method}{correlation calculation method; c("spearman", "pearson", "kendall"); Default "spearman"}
 
