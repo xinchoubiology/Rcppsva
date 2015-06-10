@@ -6,7 +6,8 @@
 \usage{
 combine.pvalue(dat.m = NULL, pvalues, cluster, chr, pos, names,
   method = c("spearman", "pearson", "kendall"),
-  combine = c("stouffer_liptak", "zscore"), weight = NULL, cutoff = 0.1)
+  combine = c("stouffer_liptak", "zscore"), weight = NULL, cutoff = 0.1,
+  cores = detectCores())
 }
 \arguments{
 \item{dat.m}{n x m delta M|beta matrix for n CpG sites across 2*m paired different patient samples}
@@ -31,6 +32,8 @@ to defined regions}
 
 \item{cutoff}{cutoff for dmr(differential methylated regions) detection's qvalue(fdr);
 Default 0.1}
+
+\item{cores}{core number for R backend combp algorithm}
 }
 \value{
 combine-pval
