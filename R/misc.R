@@ -403,7 +403,8 @@ segmentsMaker <- function(cluster, beta, cutoff, chr, pos, permbeta){
 ##' @param names probe names vector ; used in function \link{clusterMaker}
 ##' @param cutoff cutoff threshold for bump selection. only segements within cluster satisfy cutoff
 ##'        are returned as predicted region c(sig-cutoff, null-cutoff)
-##' @param permbeta Null hypothesis beta distribution
+##' @param permbeta Null hypothesis beta distribution 
+##'        [added permbeta(H0 distribution) to the end columns of region table from \link{regionSeeker}]
 ##' @param drop FALSE; create discriminate table (significant | null) or not
 ##' @param verbose FALSE
 ##' @details If an arbitary threshold is defined, regionSeeker will return a table (within / without)

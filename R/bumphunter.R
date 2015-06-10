@@ -65,11 +65,12 @@ bumphuntingEngine <- function(dat.m = NULL, design, sv.m = NULL, chr, pos, clust
   corFunc    <- match.arg(corFunc)
   merge      <- match.arg(merge)
   # make cluster
-  if(is.null(cluster))
+  if(is.null(cluster)){
     cluster <- clusterMaker(chr = chr, pos = pos, maxGap = maxGap, names = names)
-  # make correlated cluster or not
-  if(corr){
-    cluster <- corrclusterMaker(dat.m = dat.m, chr = chr, pos = pos, names = names, cluster = cluster, cutoff = cor.cutoff, maxGap = maxGap, method = corFunc, merge = merge)
+    # make correlated cluster or not
+    if(corr){
+      cluster <- corrclusterMaker(dat.m = dat.m, chr = chr, pos = pos, names = names, cluster = cluster, cutoff = cor.cutoff, maxGap = maxGap, method = corFunc, merge = merge)
+    }
   }
   # estimate each position coefficient profile
   # smooth means need 1/sigma as weight or not
