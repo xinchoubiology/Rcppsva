@@ -56,8 +56,9 @@ combine.pvalue <- function(dat.m = NULL, pvalues, cluster, chr, pos, names,
   }
   ## tabulate 
   Cp <- c(unlist(Cp), pvalues[unlist(cluster[-rIndexes]),])
-  cluster <- c(multiregions, cluster[-rIndexes])
   Cqval <- qvalue(Cp)$qvalue
+  
+  cluster <- c(multiregions, cluster[-rIndexes])
   pT <- data.table(names = names, chr = chr, pos = pos)
   setkey(pT, names)
   ## differential
@@ -66,7 +67,7 @@ combine.pvalue <- function(dat.m = NULL, pvalues, cluster, chr, pos, names,
   for(i in 1:2){
     res[[i]] <- data.table(chr    = sapply(segments[[i]], function(ix) pT[cluster[ix]]$chr[1]),
                            start  = sapply(segments[[i]], function(ix) min(pT[cluster[ix]]$pos)),
-                           end    = sapply(segments[[i]], function(ix) max(pT[cluster[ix]]$pos)),
+                           end    = sapply(segments[[i]], function(ix) max(pT[cluster[ix]]$pos) + 1),
                            L      = sapply(segments[[i]], function(ix) length(cluster[[ix]])),
                            probes = sapply(segments[[i]], function(ix) paste0(cluster[[ix]], collapse = ";")),
                            pvalue = sapply(segments[[i]], function(ix) Cp[ix]),

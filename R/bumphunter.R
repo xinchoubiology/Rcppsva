@@ -153,7 +153,7 @@ bumphuntingEngine <- function(dat.m = NULL, design, sv.m = NULL, chr, pos, clust
       }
       rm(tmp)
     }
-    # smooth processing will use the sigma
+    # TODO: smooth processing will use the sigma
     # regionSeeker by a soft threshold and their null hypothesis
     region <- regionSeeker(beta = beta, chr = chr, pos = pos, names = names, cluster = cluster, maxGap = maxGap, drop = TRUE, permbeta = beta0)
   } else if(combp){
