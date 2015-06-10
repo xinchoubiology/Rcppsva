@@ -44,6 +44,8 @@ setMethod("print", signature(x = "bumps"),
 ##' @param combp logical; If TRUE then slk p correction will be applied
 ##' @param merge how to merge two sub-clusters; c("single", "complete", "average")
 ##' @param corr.cutoff correlation cutoff in merge algorithm
+##' @param combine combine pvalue method; c("stouffer_liptak", "zscore")
+##' @param comb.cutoff cutoff for combination pvalue method
 ##' @param verbose logical. Optional printing progress message or not
 ##' @param ...
 ##' @return bumps object
@@ -59,11 +61,13 @@ bumphuntingEngine <- function(dat.m = NULL, design, sv.m = NULL, chr, pos, clust
                               smoother = bumphunter::loessByCluster, B = 10000, corr = FALSE, 
                               corFunc = c("spearman", "pearson", "kendall"), combp = FALSE,
                               merge = c("single", "complete", "average"), corr.cutoff = 0.8,
+                              combine = c("stouffer_liptak", "zscore"), comb.cutoff = 0.1,
                               verbose = TRUE, ...){
   nullMethod <- match.arg(nullMethod)
   mod        <- cbind(design, sv.m)
   corFunc    <- match.arg(corFunc)
   merge      <- match.arg(merge)
+  combine    <- match.arg(combine)
   # make cluster
   if(is.null(cluster)){
     cluster <- clusterMaker(chr = chr, pos = pos, maxGap = maxGap, names = names)
@@ -83,18 +87,19 @@ bumphuntingEngine <- function(dat.m = NULL, design, sv.m = NULL, chr, pos, clust
       sigma <- tmp$sigma
       if(combp){
         t   <- beta / sigma
-        p   <- pt(t, tmp$df.residuals)
+        p   <- 2 * pmin(pt(t, tmp$df.residuals), 1 - pt(t, tmp$df.residuals))
       }
     }else{
       tmp    <- lmFit(dat.m, mod)
       contrasts <- cbind("C-N" = c(0, 1, rep(0, ncol(mod) - 2)))
       tmp    <- contrasts.fit(tmp, contrasts)
       tmp    <- eBayes(tmp)
-      beta0  <- tmp$coefficients
-      sigma0 <- sqrt(tmp$s2.post)
+      beta  <- tmp$coefficients
+      sigma <- sqrt(tmp$s2.post)
       if(combp)
         p   <- tmp$p.value
     }
+    weight <- 1 / sigma
     rm(tmp)
   }else{
     if(!robust){
@@ -103,8 +108,9 @@ bumphuntingEngine <- function(dat.m = NULL, design, sv.m = NULL, chr, pos, clust
       sigma <- tmp$sigma
       if(combp){
         t   <- beta / sigma
-        p   <- pt(t, tmp$df.residuals)
+        p   <- 2 * pmin(pt(t, tmp$df.residuals), 1 - pt(t, tmp$df.residuals))
       }
+      sigma <- NULL
     }else{
       tmp   <- lmFit(dat.m, mod)
       contrasts <- cbind("C-N" = c(0, 1, rep(0, ncol(mod) - 2)))
@@ -115,6 +121,7 @@ bumphuntingEngine <- function(dat.m = NULL, design, sv.m = NULL, chr, pos, clust
       if(combp)
         p   <- tmp$p.value
     }
+    weight <- NULL
     rm(tmp)
   }
   
@@ -150,6 +157,6 @@ bumphuntingEngine <- function(dat.m = NULL, design, sv.m = NULL, chr, pos, clust
     # regionSeeker by a soft threshold and their null hypothesis
     region <- regionSeeker(beta = beta, chr = chr, pos = pos, names = names, cluster = cluster, maxGap = maxGap, drop = TRUE, permbeta = beta0)
   } else if(combp){
-    
+    region <- combine.pvalue(dat.m = dat.m, pvalues = p, cluster = cluster, chr = chr, pos = pos, names = names, method = method, combine = combine, weight = weight, cutoff = comb.cutoff)
   }
 }

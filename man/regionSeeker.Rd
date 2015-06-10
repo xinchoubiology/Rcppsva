@@ -25,7 +25,8 @@ used in function \link{clusterMaker}}
 \item{cutoff}{cutoff threshold for bump selection. only segements within cluster satisfy cutoff
 are returned as predicted region c(sig-cutoff, null-cutoff)}
 
-\item{permbeta}{Null hypothesis beta distribution}
+\item{permbeta}{Null hypothesis beta distribution
+[added permbeta(H0 distribution) to the end columns of region table from \link{regionSeeker}]}
 
 \item{drop}{FALSE; create discriminate table (significant | null) or not}
 

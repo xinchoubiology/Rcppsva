@@ -8,9 +8,10 @@ bumphuntingEngine(dat.m = NULL, design, sv.m = NULL, chr, pos,
   cluster = NULL, coef = 2, names, cutoff = NULL, pvalue = 0.01,
   maxGap = 500, minDist = 500, robust = FALSE, smooth = FALSE,
   nullMethod = c("permutation", "bootstrap"),
-  smoother = bumphunter::loessByCluster, B = 10000, cor = FALSE,
+  smoother = bumphunter::loessByCluster, B = 10000, corr = FALSE,
   corFunc = c("spearman", "pearson", "kendall"), combp = FALSE,
-  merge = c("single", "complete", "average"), cor.cutoff = 0.8,
+  merge = c("single", "complete", "average"), corr.cutoff = 0.8,
+  combine = c("stouffer_liptak", "zscore"), comb.cutoff = 0.1,
   verbose = TRUE, ...)
 }
 \arguments{
@@ -54,7 +55,8 @@ in the \code{loessByCluster}}
 B is used to generate permutation matrix,
 which describes permutations to generate null distribution}
 
-\item{cor}{logical; If TRUE then position correlation matrix is considered as weighted matrix}
+\item{corr}{logical; If TRUE then position correlation matrix is considered as weighted matrix
+and clusters modified by correlation constraint; Default FALSE}
 
 \item{corFunc}{Optional; "spearman"(Default) and "pearson"}
 
@@ -62,7 +64,11 @@ which describes permutations to generate null distribution}
 
 \item{merge}{how to merge two sub-clusters; c("single", "complete", "average")}
 
-\item{cor.cutoff}{correlation cutoff in merge algorithm}
+\item{corr.cutoff}{correlation cutoff in merge algorithm}
+
+\item{combine}{combine pvalue method; c("stouffer_liptak", "zscore")}
+
+\item{comb.cutoff}{cutoff for combination pvalue method}
 
 \item{verbose}{logical. Optional printing progress message or not}
 

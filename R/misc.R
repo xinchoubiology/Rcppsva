@@ -121,8 +121,10 @@ mlm.fit <- function(dat.m = NULL, design = NULL, coef = 2, B = NULL, full = FALS
   ## normalized by stdev_unscaled
   if(!is.null(B) && B >= 2){
     result$coef <- t(apply(result$coef, 1, '/', t(result$stdev_unscaled)))
-    result$stdev_unscaled <- NULL
+  }else{
+    result$coef <- result$coef / result$stdev_unscaled[1]
   }
+  result$stdev_unscaled <- NULL
   result
 }
 
@@ -322,6 +324,7 @@ corrclusterMaker <- function(dat.m = NULL, chr, pos, cluster = NULL,
   }
   corrClust   <- Dbpmerge(corrMat, merge, cutoff)
   clusterID   <- c(corrClust, rawClust[-combIndex])
+  names(clusterID) <- seq(1:length(clusterID))
   clusterID
 }
 
