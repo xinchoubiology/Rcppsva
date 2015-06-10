@@ -89,8 +89,12 @@ combine.pvalue <- function(dat.m = NULL, pvalues, cluster, chr, pos, names,
 ##' @export
 stouffer_liptak.combp <- function(pvalues, sigma, weight = NULL){
   qvalues <- qnorm(pvalues, mean = 0, sd = 1, lower.tail = TRUE)
-  Cm <- solve(chol(sigma))
-  qvalues <- Cm %*% qvalues
+  C <- try(chol(sigma), silent = TRUE)
+  if(inherits(C, "try-error")){
+    sigma <- sigma * 0.9999 + diag(0.0001 * diag(sigma))
+    C <- chol(sigma)
+  }
+  qvalues <- .Internal(backsolve(C, qvalues, ncol(C), TRUE, FALSE))
   if(is.null(weight)){
     Cq <- sum(qvalues) / sqrt(length(qvalues))
   }else{
