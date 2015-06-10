@@ -17,37 +17,46 @@
 ##'        to defined regions
 ##' @param cutoff cutoff for dmr(differential methylated regions) detection's qvalue(fdr); 
 ##'        Default 0.1
+##' @param cores core number for R backend combp algorithm
 ##' @return combine-pval
 ##' @importFrom plyr llply
-##' @import data.table
 ##' @importFrom qvalue qvalue
+##' @importFrom parallel detectCores
+##' @importFrom doMC registerDoMC
+##' @import data.table
 ##' @export
 combine.pvalue <- function(dat.m = NULL, pvalues, cluster, chr, pos, names,
                            method = c("spearman", "pearson", "kendall"), 
                            combine = c("stouffer_liptak", "zscore"),
-                           weight = NULL, cutoff = 0.1){
+                           weight = NULL, cutoff = 0.1,
+                           cores = detectCores()){
   combine  <- match.arg(combine)
   method   <- match.arg(method)
   ## regions : cluster with >= 2 probes
   rIndexes <- which(sapply(cluster, length) >= 2)
   multiregions <- cluster[rIndexes]
   
+  registerDoMC(cores = cores)
   if(combine == "stouffer_liptak"){
-    Cp <- llply(multiregions, .fun = function(ix){
-                                       sigma <- cov(t(dat.m[ix,]), method = method)
-                                       combp <- stouffer_liptak.combp(pvalues[ix,], sigma, weight)
-                                       combp
-                                     })
+    Cp <- llply(multiregions, 
+                .fun = function(ix){
+                          sigma <- cov(t(dat.m[ix,]), method = method)
+                          combp <- stouffer_liptak.combp(pvalues[ix,], sigma, weight)
+                          combp
+                       }, 
+                .parallel = TRUE)
   }else{
-    Cp <- llply(multiregions, .fun = function(ix){
-                                      sigma <- cov(t(dat.m[ix,]), method = method)
-                                      combp <- zscore.combp(pvalues[ix,], sigma, weight)
-                                      combp
-                                     })
+    Cp <- llply(multiregions,
+                .fun = function(ix){
+                          sigma <- cov(t(dat.m[ix,]), method = method)
+                          combp <- zscore.combp(pvalues[ix,], sigma, weight)
+                          combp
+                       }, 
+                .parallel = TRUE)
   }
   ## tabulate 
-  clusters <- c(multiregions, cluster[-rIndexes])
-  Cp <- c(unlist(Cp), pvalues[-rIndexes])
+  Cp <- c(unlist(Cp), pvalues[unlist(cluster[-rIndexes]),])
+  cluster <- c(multiregions, cluster[-rIndexes])
   Cqval <- qvalue(Cp)$qvalue
   pT <- data.table(names = names, chr = chr, pos = pos)
   setkey(pT, names)
@@ -80,12 +89,7 @@ combine.pvalue <- function(dat.m = NULL, pvalues, cluster, chr, pos, names,
 ##' @export
 stouffer_liptak.combp <- function(pvalues, sigma, weight = NULL){
   qvalues <- qnorm(pvalues, mean = 0, sd = 1, lower.tail = TRUE)
-  C <- try(chol(sigma), silent = TRUE)
-  if(inherits(C, "try-error")){
-    sigma <- sigma * 0.9999 + diag(0.0001 * diag(sigma))
-    C <- chol(sigma)
-  }
-  Cm <- solve(C)
+  Cm <- solve(chol(sigma))
   qvalues <- Cm %*% qvalues
   if(is.null(weight)){
     Cq <- sum(qvalues) / sqrt(length(qvalues))
