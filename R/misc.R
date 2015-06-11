@@ -422,6 +422,12 @@ regionSeeker <- function(beta, chr, pos, cluster = NULL, maxGap = 500, names,
   if(is.null(cluster)){
     cluster <- clusterMaker(chr = chr, pos = pos, maxGap = maxGap, names = names)
   }
+  if(inherits(cluster, "list")){
+    tmp <- unlist(sapply(1:length(cluster), function(ix) rep(ix, length(cluster[[ix]]))))
+    names(tmp) <- unlist(cluster)
+    cluster <- tmp
+    rm(tmp)
+  }
   genome     <- GRanges(seqnames = chr, ranges = IRanges::IRanges(start = pos, width = 1), names = names, chr = chr)
   seqlevels(genome) <- sort(seqlevels(genome))
   genome     <- sort(genome)

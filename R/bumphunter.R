@@ -34,7 +34,6 @@ setMethod("print", signature(x = "bumps"),
 ##' @param robust logic, use robust linear regression or not; Default FALSE
 ##' @param smooth logic. If TRUE then the standard error or correlation of point-wise estimatrs will be used as weigths 
 ##'        in the \code{loessByCluster}
-##' @param smoother smooth function to estimate genome profile.
 ##' @param B integer; Denoting the number of resamples to computr null distribution. Default = 0
 ##'        B is used to generate permutation matrix, 
 ##'        which describes permutations to generate null distribution
@@ -55,20 +54,22 @@ setMethod("print", signature(x = "bumps"),
 ##  #                                3          3          3          4 
 ##  # -like vector
 ##' @export
-bumphuntingEngine <- function(dat.m = NULL, design, sv.m = NULL, chr, pos, cluster = NULL, coef = 2,
-                              names, cutoff = NULL, pvalue = 0.01, maxGap = 500, minDist = 500,
-                              robust = FALSE, smooth = FALSE, nullMethod = c("permutation", "bootstrap"),
-                              smoother = bumphunter::loessByCluster, B = 10000, corr = FALSE, 
+bumphuntingEngine <- function(dat.m = NULL, design, sv.m = NULL, 
+                              chr, pos, cluster = NULL, coef = 2,
+                              names, cutoff = NULL, pvalue = 0.01, maxGap = 500, 
+                              minDist = 500, robust = FALSE, smooth = FALSE, 
+                              nullMethod = c("permutation", "bootstrap"), B = 10000, corr = FALSE, 
                               corFunc = c("spearman", "pearson", "kendall"), combp = FALSE,
                               merge = c("single", "complete", "average"), corr.cutoff = 0.8,
                               combine = c("stouffer_liptak", "zscore"), comb.cutoff = 0.1,
                               verbose = TRUE, ...){
   nullMethod <- match.arg(nullMethod)
-  mod        <- cbind(design, sv.m)
   corFunc    <- match.arg(corFunc)
   merge      <- match.arg(merge)
   combine    <- match.arg(combine)
-  # make cluster
+  ## model matrix
+  mod        <- cbind(design, sv.m)
+  ## make cluster
   if(is.null(cluster)){
     cluster <- clusterMaker(chr = chr, pos = pos, maxGap = maxGap, names = names)
     # make correlated cluster or not
@@ -77,54 +78,35 @@ bumphuntingEngine <- function(dat.m = NULL, design, sv.m = NULL, chr, pos, clust
     }
   }
   # estimate each position coefficient profile
-  # smooth means need 1/sigma as weight or not
   # robust means squeeze variance or not
   # combp  means calculate p-value or not
-  if(smooth){
-    if(!robust){
-      tmp   <- mlm.fit(dat.m = dat.m, design = mod, coef = 2, full = TRUE)
-      beta  <- tmp$coef
-      sigma <- tmp$sigma
-      if(combp){
-        t   <- beta / sigma
-        p   <- 2 * pmin(pt(t, tmp$df.residuals), 1 - pt(t, tmp$df.residuals))
-      }
-    }else{
-      tmp    <- lmFit(dat.m, mod)
-      contrasts <- cbind("C-N" = c(0, 1, rep(0, ncol(mod) - 2)))
-      tmp    <- contrasts.fit(tmp, contrasts)
-      tmp    <- eBayes(tmp)
-      beta  <- tmp$coefficients
-      sigma <- sqrt(tmp$s2.post)
-      if(combp)
-        p   <- tmp$p.value
+  if(!robust){
+    tmp   <- mlm.fit(dat.m = dat.m, design = mod, coef = 2, full = TRUE)
+    beta  <- tmp$coef
+    sigma <- tmp$sigma
+    if(combp){
+      t   <- beta / sigma
+      p   <- 2 * pmin(pt(t, tmp$df.residuals), 1 - pt(t, tmp$df.residuals))
     }
-    weight <- 1 / sigma
     rm(tmp)
   }else{
-    if(!robust){
-      tmp   <- mlm.fit(dat.m = dat.m, design = mod, coef = 2, full = TRUE)
-      beta  <- tmp$coef
-      sigma <- tmp$sigma
-      if(combp){
-        t   <- beta / sigma
-        p   <- 2 * pmin(pt(t, tmp$df.residuals), 1 - pt(t, tmp$df.residuals))
-      }
-      sigma <- NULL
-    }else{
-      tmp   <- lmFit(dat.m, mod)
-      contrasts <- cbind("C-N" = c(0, 1, rep(0, ncol(mod) - 2)))
-      tmp   <- contrasts.fit(tmp, contrasts)
-      tmp   <- eBayes(tmp)
-      beta  <- tmp$coefficients
-      sigma <- NULL
-      if(combp)
-        p   <- tmp$p.value
-    }
-    weight <- NULL
+    tmp   <- lmFit(dat.m, mod)
+    contrasts <- cbind("C-N" = c(0, 1, rep(0, ncol(mod) - 2)))
+    tmp   <- contrasts.fit(tmp, contrasts)
+    tmp   <- eBayes(tmp)
+    beta  <- tmp$coefficients
+    sigma <- sqrt(tmp$s2.post)
+    if(combp)
+      p   <- tmp$p.value
     rm(tmp)
   }
-  
+  # smooth means need 1/sigma as weight or not
+  # TODO: smooth processing will use the sigma
+  weight <- NULL
+  if(smooth){
+    weight <- sigma
+    beta <- smoother(beta = beta, pos = pos, names = names, cluster = cluster, weight = weight, method = "weightedLowess")
+  }
   # Region search is based on :
   #           + combination-p method 
   #           + permutation method
@@ -153,10 +135,10 @@ bumphuntingEngine <- function(dat.m = NULL, design, sv.m = NULL, chr, pos, clust
       }
       rm(tmp)
     }
-    # TODO: smooth processing will use the sigma
     # regionSeeker by a soft threshold and their null hypothesis
     region <- regionSeeker(beta = beta, chr = chr, pos = pos, names = names, cluster = cluster, maxGap = maxGap, drop = TRUE, permbeta = beta0)
   } else if(combp){
     region <- combine.pvalue(dat.m = dat.m, pvalues = p, cluster = cluster, chr = chr, pos = pos, names = names, method = method, combine = combine, weight = weight, cutoff = comb.cutoff)
   }
+  region
 }

@@ -7,8 +7,7 @@
 bumphuntingEngine(dat.m = NULL, design, sv.m = NULL, chr, pos,
   cluster = NULL, coef = 2, names, cutoff = NULL, pvalue = 0.01,
   maxGap = 500, minDist = 500, robust = FALSE, smooth = FALSE,
-  nullMethod = c("permutation", "bootstrap"),
-  smoother = bumphunter::loessByCluster, B = 10000, corr = FALSE,
+  nullMethod = c("permutation", "bootstrap"), B = 10000, corr = FALSE,
   corFunc = c("spearman", "pearson", "kendall"), combp = FALSE,
   merge = c("single", "complete", "average"), corr.cutoff = 0.8,
   combine = c("stouffer_liptak", "zscore"), comb.cutoff = 0.1,
@@ -48,8 +47,6 @@ or below the negative of cutoff will be used as candidate bump regions.}
 in the \code{loessByCluster}}
 
 \item{nullMethod}{Method for generating null candidate regions. If ncol(design) > 2. bootstrap method is recommanded}
-
-\item{smoother}{smooth function to estimate genome profile.}
 
 \item{B}{integer; Denoting the number of resamples to computr null distribution. Default = 0
 B is used to generate permutation matrix,
