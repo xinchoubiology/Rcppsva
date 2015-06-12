@@ -12,7 +12,6 @@ setMethod("print", signature(x = "bumps"),
             }
           })
 
-
 ##' bumphuntingEngine
 ##' 
 ##' @title bumphuntingEngine
@@ -163,9 +162,6 @@ bumphuntingEngine <- function(dat.m = NULL, design, sv.m = NULL,
     ## TODO fixed weight argument error
     if(verbose){
       cat(sprintf("[Bumphunting]\t Finding DMRs by Comb-p method... \n"))
-    }
-    if(inherits(cluster, "list")){
-      cluster <- split(names(cluster), cluster)
     }
     weight <- NULL
     region <- combine.pvalue(dat.m = dat.m, pvalues = p, cluster = cluster, chr = chr, pos = pos, names = names, method = method, combine = combine, weight = weight, cutoff = comb.cutoff)

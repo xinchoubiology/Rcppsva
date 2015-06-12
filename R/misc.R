@@ -251,22 +251,19 @@ wilcox.fit <- function(dat.m = NULL, alternative = c("two.sided", "greater", "le
 ##' cluster <- clusterMaker(chr = BED$chr, pos = BED$pos, maxGap = 1000, names = rownames(BED))
 ##' @export
 clusterMaker <- function(chr, pos, maxGap = 500, names){
-  Genome     <- GRanges(seqnames = chr, ranges = IRanges::IRanges(start = pos, width = 1), names = names)
-  seqlevels(Genome) <- sort(seqlevels(Genome))
-  Genome     <- sort(Genome)
-  ChrIndexes <- split(Genome, seqnames(Genome))
-  clusterID  <- llply(ChrIndexes, function(chr){
-    ClustIdx <- (diff(c(0, start(chr))) > maxGap) + 0
-    cumsum(ClustIdx)
-  })
-  offset <- 0
-  for(i in 1:length(clusterID)){
-    clusterID[[i]] <- clusterID[[i]] + offset
-    offset <- tail(clusterID[[i]], 1)
+  genome     <- GRanges(seqnames = chr, ranges = IRanges::IRanges(start = pos, width = 1), names = names)
+  seqlevels(genome) <- sort(seqlevels(genome))
+  genome     <- sort(genome)
+  chrIndexes <- split(genome, seqnames(genome))
+  cluster    <- llply(chrIndexes, function(chr) cumsum((diff(c(0, start(chr))) > maxGap) + 0))
+  offset     <- 0
+  for(i in 1:length(cluster)){
+    cluster[[i]] <- cluster[[i]] + offset
+    offset <- tail(cluster[[i]], 1)
   }
-  clusterID <- unlist(clusterID)
-  names(clusterID) <- Genome$names
-  clusterID
+  cluster <- unlist(cluster)
+  names(cluster) <- genome$names
+  cluster
 }
 
 ##' correlated cluster maker. Build the CpG cluster by correlation
@@ -301,55 +298,38 @@ corrclusterMaker <- function(dat.m = NULL, chr, pos, cluster = NULL,
                              merge = c("single", "complete", "average")){
   method <- match.arg(method)
   merge  <- match.arg(merge)
-  ## prepare IRange
-  Genome     <- GRanges(seqnames = chr, ranges = IRanges::IRanges(start = pos, width = 1), names = names)
-  seqlevels(Genome) <- sort(seqlevels(Genome))
-  Genome     <- sort(Genome)
   
   if(is.null(cluster)){
     cluster <- clusterMaker(chr = chr, pos = pos, maxGap = maxGap, names = names)
   }
   cnames     <- names(cluster)
   names(pos) <- names
-  rawClust  <- split(cnames, cluster)
-  combIndex <- which(sapply(rawClust, function(c) length(c) > 1))
-  multClust <- rawClust[combIndex]
+  rawcluster <- split(cnames, cluster)
+  combIndex  <- which(sapply(rawcluster, function(c) length(c) > 1))
+  multcluster <- rawcluster[combIndex]
   
   ## build correlation matrix within clusters
   if(is.null(corrmat)){
     if(cores >= 2){
       registerDoMC(cores = cores)
-      corrmat   <- llply(multClust, .fun = function(ix){
+      corrmat   <- llply(multcluster, .fun = function(ix){
                                              dist <- abs(outer(pos[ix], pos[ix], "-"))
                                              # colnames(dist) <- rownames(dist) <- ix
                                              cor(t(dat.m[ix,]), method = method) * (dist < maxGap)
                                            }, .parallel = TRUE)
     }else{
-      corrmat   <- llply(multClust, .fun = function(ix){
+      corrmat   <- llply(multcluster, .fun = function(ix){
                                              dist <- abs(outer(pos[ix], pos[ix], "-"))
                                              colnames(dist) <- rownames(dist) <- ix
                                              cor(t(dat.m[ix,]), method = method) * (dist < maxGap)
                                            })
     }
   }
-  corrClust   <- Dbpmerge(corrmat, merge, cutoff)
-  clusterID   <- c(corrClust, rawClust[-combIndex])
-  names(clusterID) <- seq(1:length(clusterID))
+  corrcluster    <- Dbpmerge(corrmat, merge, cutoff)
+  cluster        <- c(corrcluster, rawcluster[-combIndex])
+  names(cluster) <- seq(1:length(cluster))
   
-  ## create cluster vector
-  tmp <- unlist(sapply(1:length(clusterID), function(ix) rep(ix, length(clusterID[[ix]]))))
-  names(tmp) <- unlist(clusterID)
-  clusterID <- tmp
-  rm(tmp)
-  
-  ## output uniform
-  clusterID <- clusterID[Genome$names]
-  Indexes <- seq(1:length(unique(clusterID)))
-  names(Indexes) <- unique(clusterID)
-  clusterID <- Indexes[as.character(clusterID)]
-  names(clusterID) <- Genome$names
-
-  clusterID
+  cluster
 }
 
 ##' sub-regions merge and split
@@ -363,7 +343,7 @@ corrclusterMaker <- function(dat.m = NULL, chr, pos, cluster = NULL,
 ##' @export
 Dbpmerge <- function(c.mat = NULL, merge = c("single", "complete", "average"), cutoff = 0.8){
   merge <- match.arg(merge)
-  corrClust <- llply(c.mat, .fun = function(mx){
+  corrcluster <- llply(c.mat, .fun = function(mx){
                                     pname <- rownames(mx)
                                     diag(mx) <- 0
                                     mx <- switch(merge, single   = single_linkage(mx),
@@ -373,7 +353,7 @@ Dbpmerge <- function(c.mat = NULL, merge = c("single", "complete", "average"), c
                                     cIndexes <- cumsum(c(1, clique_merge(mx)))
                                     split(pname, cIndexes)
                                    })
-  unlist(corrClust, recursive = FALSE)
+  unlist(corrcluster, recursive = FALSE)
 }
 
 
@@ -446,6 +426,9 @@ regionSeeker <- function(beta, chr, pos, cluster = NULL, maxGap = 500, names,
   if(is.null(cluster)){
     cluster <- clusterMaker(chr = chr, pos = pos, maxGap = maxGap, names = names)
   }
+  if(inherits(cluster, "list")){
+    cluster <- List2Index(cluster = cluster, chr = chr, pos = pos, names = names)
+  }
   
   genome     <- GRanges(seqnames = chr, ranges = IRanges::IRanges(start = pos, width = 1), names = names, chr = chr)
   seqlevels(genome) <- sort(seqlevels(genome))
@@ -508,6 +491,31 @@ Index.NA <- function(mat, by = c("row", "col")){
   }
 }
 
+##' convert cluster list to Index with increased number
+##' @title List2Index
+##' @param cluster
+##' @param chr
+##' @param pos
+##' @param names
+##' @return clusterIndex
+List2Index <- function(cluster, chr, pos, names){
+  ## prepare IRange
+  genome     <- GRanges(seqnames = chr, ranges = IRanges::IRanges(start = pos, width = 1), names = names)
+  seqlevels(genome) <- sort(seqlevels(genome))
+  genome     <- sort(genome)
+  
+  ## convert from cluster to index
+  ## create cluster vector
+  indexes <- unlist(sapply(1:length(cluster), function(ix) rep(ix, length(cluster[[ix]]))))
+  names(indexes) <- unlist(cluster)
+  cluster <- indexes[genome$names]
+  indexes <- seq(1:length(unique(cluster)))
+  names(indexes) <- unique(cluster)
+  cluster <- indexes[as.character(cluster)]
+  names(cluster) <- genome$names
+  
+  cluster
+}
 
 
 
