@@ -65,6 +65,7 @@ bumphuntingEngine <- function(dat.m = NULL, design, sv.m = NULL,
                               merge = c("single", "complete", "average"), corr.cutoff = 0.8,
                               combine = c("stouffer_liptak", "zscore"), comb.cutoff = 0.1,
                               verbose = TRUE, ...){
+  
   nullMethod <- match.arg(nullMethod)
   corFunc    <- match.arg(corFunc)
   merge      <- match.arg(merge)
@@ -73,16 +74,25 @@ bumphuntingEngine <- function(dat.m = NULL, design, sv.m = NULL,
   ## model matrix
   mod        <- cbind(design, sv.m)
   ## make cluster
+  if(verbose){
+    cat(sprintf("[Bumphunting]\t Generating clusters by gap constraint = %d \n", maxGap))
+  }
   if(is.null(cluster)){
     cluster <- clusterMaker(chr = chr, pos = pos, maxGap = maxGap, names = names)
     # make correlated cluster or not
     if(corr){
+      if(verbose){
+        cat(sprintf("[Bumphunting]\t Splitting clusters whose correlation >= %f \n", cor.cutoff))
+      }
       cluster <- corrclusterMaker(dat.m = dat.m, chr = chr, pos = pos, names = names, cluster = cluster, cutoff = cor.cutoff, maxGap = maxGap, method = corFunc, merge = merge)
     }
   }
   # estimate each position coefficient profile
   # robust means squeeze variance or not
   # combp  means calculate p-value or not
+  if(verbose){
+    cat(sprintf("[Bumphunting]\t Estimating beta value for each probes \n"))
+  }
   if(!robust){
     tmp   <- mlm.fit(dat.m = dat.m, design = mod, coef = 2, full = TRUE)
     beta  <- tmp$coef
@@ -106,12 +116,18 @@ bumphuntingEngine <- function(dat.m = NULL, design, sv.m = NULL,
   weight <- NULL
   if(smooth){
     weight <- sigma
+    if(verbose){
+      cat(sprintf("[Bumphunting]\t Smoothing beta values within cluster \n"))
+    }
     beta <- smoother(beta = beta, pos = pos, names = names, cluster = cluster, weight = weight, method = smoothMethod)
   }
   # Region search is based on :
   #           + combination-p method 
   #           + permutation method
   if(!combp && B > 0){
+    if(verbose){
+      cat(sprintf("[Bumphunting]\t Computing null distribution of beta by %s \n", nullMethod))
+    }
     # permutation calculation
     if(nullMethod == "permutation"){
       tmp <- mlm.fit(dat.m = dat.m, design = mod, coef = 2, B = B, full = TRUE)
@@ -137,9 +153,19 @@ bumphuntingEngine <- function(dat.m = NULL, design, sv.m = NULL,
       rm(tmp)
     }
     # regionSeeker by a soft threshold and their null hypothesis
+    if(verbose){
+      cat(sprintf("[Bumphunting]\t Finding DMRs... \n"))
+    }
     region <- regionSeeker(beta = beta, chr = chr, pos = pos, names = names, cluster = cluster, maxGap = maxGap, drop = TRUE, permbeta = beta0)
   } else if(combp){
+    ## TODO fixed weight argument error
+    if(verbose){
+      cat(sprintf("[Bumphunting]\t Finding DMRs by Comb-p method... \n"))
+    }
+    weight <- NULL
     region <- combine.pvalue(dat.m = dat.m, pvalues = p, cluster = cluster, chr = chr, pos = pos, names = names, method = method, combine = combine, weight = weight, cutoff = comb.cutoff)
   }
+  
+  ## TODO return type will be bumps object
   region
 }

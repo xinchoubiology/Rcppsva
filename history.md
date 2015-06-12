@@ -18,3 +18,5 @@ Rcpp Integration Surrogate Variable Analysis and Rewrite by RcppEigen and RcppGS
 
 # Rcppsva 0.1.3
 + Combine-pvalue algorithm for DMR search added
+
++ @Jun, 11. Pass weight argument to \link{combp} function should be fixed
