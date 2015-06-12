@@ -467,7 +467,6 @@ regionSeeker <- function(beta, chr, pos, cluster = NULL, maxGap = 500, names,
   return(res)
 }
 
-
 ##' fitting L/S model with missing values
 ##' @description Beta.NA function is borrow from package sva
 ##' @title Beta.NA
@@ -516,6 +515,3 @@ List2Index <- function(cluster, chr, pos, names){
   
   cluster
 }
-
-
-
