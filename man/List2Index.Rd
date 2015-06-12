@@ -7,13 +7,13 @@
 List2Index(cluster, chr, pos, names)
 }
 \arguments{
-\item{cluster}{}
+\item{cluster}{vector of probes clusters By distance(maxGap) constraints}
 
-\item{chr}{}
+\item{chr}{Chromosome vector}
 
-\item{pos}{}
+\item{pos}{position numeric vector}
 
-\item{names}{}
+\item{names}{probe names vector ; used in function \link{clusterMaker}}
 }
 \value{
 clusterIndex

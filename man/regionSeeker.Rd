@@ -6,7 +6,7 @@
 \usage{
 regionSeeker(beta, chr, pos, cluster = NULL, maxGap = 500, names,
   cutoff = c(quantile(abs(beta), 0.9), quantile(abs(beta), 0.1)),
-  permbeta = NULL, drop = FALSE, verbose = FALSE)
+  permbeta = NULL, mcores = 2, drop = FALSE, verbose = FALSE)
 }
 \arguments{
 \item{beta}{vector of different probes}
@@ -27,6 +27,8 @@ are returned as predicted region c(sig-cutoff, null-cutoff)}
 
 \item{permbeta}{Null hypothesis beta distribution
 [added permbeta(H0 distribution) to the end columns of region table from \link{regionSeeker}]}
+
+\item{mcores}{multiple threads used in \link{regionSeeker}}
 
 \item{drop}{FALSE; create discriminate table (significant | null) or not}
 

@@ -65,14 +65,17 @@ combine.pvalue <- function(dat.m = NULL, pvalues, cluster, chr, pos, names,
   segments <- list("diff" = which(Cqval <= cutoff), "null" = which(Cqval > cutoff))
   res <- vector("list", 2)
   for(i in 1:2){
-    res[[i]] <- data.table(chr    = sapply(segments[[i]], function(ix) pT[cluster[ix]]$chr[1]),
-                           start  = sapply(segments[[i]], function(ix) min(pT[cluster[ix]]$pos)),
-                           end    = sapply(segments[[i]], function(ix) max(pT[cluster[ix]]$pos) + 1),
-                           length = sapply(segments[[i]], function(ix) max(pT[cluster[ix]]$pos) + 1 - min(pT[cluster[ix]]$pos)),
-                           L      = sapply(segments[[i]], function(ix) length(cluster[[ix]])),
-                           probes = sapply(segments[[i]], function(ix) paste0(cluster[[ix]], collapse = ";")),
-                           pvalue = sapply(segments[[i]], function(ix) Cp[ix]),
-                           fdr    = sapply(segments[[i]], function(ix) Cqval[ix]))
+    out <- llply(segments[[i]], function(ix){
+                                  data.table(chr    = pT[cluster[ix]]$chr[1], 
+                                             start  = min(pT[cluster[ix]]$pos), max(pT[cluster[ix]]$pos) + 1, 
+                                             end    = max(pT[cluster[ix]]$pos) + 1 - min(pT[cluster[ix]]$pos), 
+                                             L      = length(cluster[[ix]]),
+                                             probes = paste0(cluster[[ix]], collapse = ";"), 
+                                             pvalue = Cp[ix], 
+                                             fdr    = Cqval[ix])
+                                }, .parallel = TRUE)
+    
+    res[[i]] <- do.call(rbind, out)
   }
   names(res) <- names(segments)
   return(res)

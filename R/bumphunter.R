@@ -159,10 +159,10 @@ bumphuntingEngine <- function(dat.m = NULL, design, sv.m = NULL,
     }
     region <- regionSeeker(beta = beta, chr = chr, pos = pos, names = names, cluster = cluster, maxGap = maxGap, drop = TRUE, permbeta = beta0)
   } else if(combp){
-    ## TODO fixed weight argument error
     if(verbose){
       cat(sprintf("[Bumphunting]\t Finding DMRs by Comb-p method... \n"))
     }
+    ## TODO fixed weight argument error
     weight <- NULL
     region <- combine.pvalue(dat.m = dat.m, pvalues = p, cluster = cluster, chr = chr, pos = pos, names = names, method = method, combine = combine, weight = weight, cutoff = comb.cutoff)
   }

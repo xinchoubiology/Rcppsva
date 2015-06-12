@@ -413,6 +413,7 @@ segmentsMaker <- function(cluster, beta, cutoff, chr, pos, permbeta){
 ##' @param permbeta Null hypothesis beta distribution 
 ##'        [added permbeta(H0 distribution) to the end columns of region table from \link{regionSeeker}]
 ##' @param drop FALSE; create discriminate table (significant | null) or not
+##' @param mcores multiple threads used in \link{regionSeeker}
 ##' @param verbose FALSE
 ##' @details If an arbitary threshold is defined, regionSeeker will return a table (within / without)
 ##'          the threshold. In bump hunting algorithms, these contiguous probes mean bumps.
@@ -422,12 +423,16 @@ segmentsMaker <- function(cluster, beta, cutoff, chr, pos, permbeta){
 ##' @export
 regionSeeker <- function(beta, chr, pos, cluster = NULL, maxGap = 500, names, 
                          cutoff = c(quantile(abs(beta), 0.9), quantile(abs(beta), 0.1)),
-                         permbeta = NULL, drop = FALSE, verbose = FALSE){
+                         permbeta = NULL, mcores = 2,
+                         drop = FALSE, verbose = FALSE){
   if(is.null(cluster)){
     cluster <- clusterMaker(chr = chr, pos = pos, maxGap = maxGap, names = names)
   }
   if(inherits(cluster, "list")){
     cluster <- List2Index(cluster = cluster, chr = chr, pos = pos, names = names)
+  }
+  if(mcores >= 2){
+    registerDoMC(cores = mcores)
   }
   
   genome     <- GRanges(seqnames = chr, ranges = IRanges::IRanges(start = pos, width = 1), names = names, chr = chr)
@@ -443,22 +448,26 @@ regionSeeker <- function(beta, chr, pos, cluster = NULL, maxGap = 500, names,
   res <- vector("list", 3)
   
   if(verbose)
-    cat("Estimating Statistics For Regions Hyper, Hypo, NULL ...")
+    cat("[regionSeeker]\t Estimating Statistics For Regions Hyper, Hypo, NULL ...")
   
   L <- ncol(permbeta)
   for(i in 1:3){
-    res[[i]] <- data.table(chr     = sapply(segments[[i]], function(ix) ix[1,6]),
-                           start   = sapply(segments[[i]], function(ix) min(ix[,7])),
-                           end     = sapply(segments[[i]], function(ix) max(ix[,7]) + 1),
-                           length  = sapply(segments[[i]], function(ix) max(ix[,7]) - min(ix[,7]) + 1),
-                           value   = sapply(segments[[i]], function(ix) mean(ix[,3])),
-                           area    = sapply(segments[[i]], function(ix) abs(sum(ix[,3]))),
-                           cluster = sapply(segments[[i]], function(ix) ix[1,2]),
-                           L       = sapply(segments[[i]], function(ix) nrow(ix)),
-                           cgnames = sapply(segments[[i]], function(ix) paste0(ix[,1],collapse = ";")),
-                           pvalue  = sapply(segments[[i]], function(ix) min(sum(mean(ix[,3]) >= colMeans(ix[,-(1:7)])), sum(mean(ix[,3]) <= colMeans(ix[,-(1:7)]))) / L),
-                           parea   = sapply(segments[[i]], function(ix) sum(abs(sum(ix[,3])) <= abs(colSums(ix[,-(1:7)])))/ L),
-                           status  = sapply(segments[[i]], function(ix) names(segments)[i]))
+    out <- llply(segments[[i]], function(ix){
+                                  data.table(chr     = ix[1,6], 
+                                             start   = min(ix[,7]), 
+                                             end     = max(ix[,7]) + 1, 
+                                             length  = max(ix[,7]) - min(ix[,7]) + 1,
+                                             value   = mean(ix[,3]), 
+                                             area    = abs(sum(ix[,3])), 
+                                             cluster = ix[1,2], 
+                                             L = nrow(ix), 
+                                             cgnames = paste0(ix[,1],collapse = ";"),
+                                             pvalue  = min(sum(mean(ix[,3]) >= colMeans(ix[,-(1:7)])), sum(mean(ix[,3]) <= colMeans(ix[,-(1:7)]))) / L,
+                                             parea   = sum(abs(sum(ix[,3])) <= abs(colSums(ix[,-(1:7)])))/ L,
+                                             status  = names(segments)[i])
+                                }, .parallel = TRUE)
+    
+    res[[i]] <- do.call(rbind, out)
   }
   names(res) <- names(segments)
   if(drop){
@@ -492,10 +501,10 @@ Index.NA <- function(mat, by = c("row", "col")){
 
 ##' convert cluster list to Index with increased number
 ##' @title List2Index
-##' @param cluster
-##' @param chr
-##' @param pos
-##' @param names
+##' @param cluster vector of probes clusters By distance(maxGap) constraints
+##' @param chr Chromosome vector
+##' @param pos position numeric vector
+##' @param names probe names vector ; used in function \link{clusterMaker}
 ##' @return clusterIndex
 List2Index <- function(cluster, chr, pos, names){
   ## prepare IRange
