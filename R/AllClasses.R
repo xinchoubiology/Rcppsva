@@ -1,5 +1,3 @@
-setOldClass("print")
-
 ##' Class "bumps"
 ##' The class contains information of methyaltion differential related region
 ##' 
