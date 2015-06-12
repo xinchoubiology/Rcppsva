@@ -286,18 +286,26 @@ clusterMaker <- function(chr, pos, maxGap = 500, names){
 ##' @param method correlation calculation method; c("spearman", "pearson", "kendall"); Default "spearman"
 ##' @param merge how to merge two sub-clusters; c("single", "complete", "average")
 ##' @param pos CpG position with their probes id
+##' @param corrmat correlation matrix for each cluster; Default NULL
 ##' @param cores number of thread used by \link{corrclusterMaker}
 ##' @details only clusters contain >= 2 probes can get a corrected p-value
 ##' @return list of clusterID vector
 ##' @importFrom plyr llply
 ##' @importFrom doMC registerDoMC
+##' @importFrom parallel detectCores
 ##' @export
 corrclusterMaker <- function(dat.m = NULL, chr, pos, cluster = NULL, 
-                             maxGap = 500, names, cutoff = 0.8, cores = 2,
+                             maxGap = 500, names, cutoff = 0.8, 
+                             corrmat = NULL, cores = detectCores(),
                              method = c("pearson", "spearman", "kendall"), 
                              merge = c("single", "complete", "average")){
   method <- match.arg(method)
   merge  <- match.arg(merge)
+  ## prepare IRange
+  Genome     <- GRanges(seqnames = chr, ranges = IRanges::IRanges(start = pos, width = 1), names = names)
+  seqlevels(Genome) <- sort(seqlevels(Genome))
+  Genome     <- sort(Genome)
+  
   if(is.null(cluster)){
     cluster <- clusterMaker(chr = chr, pos = pos, maxGap = maxGap, names = names)
   }
@@ -308,23 +316,39 @@ corrclusterMaker <- function(dat.m = NULL, chr, pos, cluster = NULL,
   multClust <- rawClust[combIndex]
   
   ## build correlation matrix within clusters
-  if(cores >= 2){
-    registerDoMC(cores = cores)
-    corrMat   <- llply(multClust, .fun = function(ix){
-                                           dist <- abs(outer(pos[ix], pos[ix], "-"))
-                                           # colnames(dist) <- rownames(dist) <- ix
-                                           cor(t(dat.m[ix,]), method = method) * (dist < maxGap)
-                                         }, .parallel = TRUE)
-  }else{
-    corrMat   <- llply(multClust, .fun = function(ix){
-                                           dist <- abs(outer(pos[ix], pos[ix], "-"))
-                                           colnames(dist) <- rownames(dist) <- ix
-                                           cor(t(dat.m[ix,]), method = method) * (dist < maxGap)
-                                         })
+  if(is.null(corrmat)){
+    if(cores >= 2){
+      registerDoMC(cores = cores)
+      corrmat   <- llply(multClust, .fun = function(ix){
+                                             dist <- abs(outer(pos[ix], pos[ix], "-"))
+                                             # colnames(dist) <- rownames(dist) <- ix
+                                             cor(t(dat.m[ix,]), method = method) * (dist < maxGap)
+                                           }, .parallel = TRUE)
+    }else{
+      corrmat   <- llply(multClust, .fun = function(ix){
+                                             dist <- abs(outer(pos[ix], pos[ix], "-"))
+                                             colnames(dist) <- rownames(dist) <- ix
+                                             cor(t(dat.m[ix,]), method = method) * (dist < maxGap)
+                                           })
+    }
   }
-  corrClust   <- Dbpmerge(corrMat, merge, cutoff)
+  corrClust   <- Dbpmerge(corrmat, merge, cutoff)
   clusterID   <- c(corrClust, rawClust[-combIndex])
   names(clusterID) <- seq(1:length(clusterID))
+  
+  ## create cluster vector
+  tmp <- unlist(sapply(1:length(clusterID), function(ix) rep(ix, length(clusterID[[ix]]))))
+  names(tmp) <- unlist(clusterID)
+  clusterID <- tmp
+  rm(tmp)
+  
+  ## output uniform
+  clusterID <- clusterID[Genome$names]
+  Indexes <- seq(1:length(unique(clusterID)))
+  names(Indexes) <- unique(clusterID)
+  clusterID <- Indexes[as.character(clusterID)]
+  names(clusterID) <- Genome$names
+
   clusterID
 }
 
@@ -422,12 +446,7 @@ regionSeeker <- function(beta, chr, pos, cluster = NULL, maxGap = 500, names,
   if(is.null(cluster)){
     cluster <- clusterMaker(chr = chr, pos = pos, maxGap = maxGap, names = names)
   }
-  if(inherits(cluster, "list")){
-    tmp <- unlist(sapply(1:length(cluster), function(ix) rep(ix, length(cluster[[ix]]))))
-    names(tmp) <- unlist(cluster)
-    cluster <- tmp
-    rm(tmp)
-  }
+  
   genome     <- GRanges(seqnames = chr, ranges = IRanges::IRanges(start = pos, width = 1), names = names, chr = chr)
   seqlevels(genome) <- sort(seqlevels(genome))
   genome     <- sort(genome)
@@ -448,6 +467,7 @@ regionSeeker <- function(beta, chr, pos, cluster = NULL, maxGap = 500, names,
     res[[i]] <- data.table(chr     = sapply(segments[[i]], function(ix) ix[1,6]),
                            start   = sapply(segments[[i]], function(ix) min(ix[,7])),
                            end     = sapply(segments[[i]], function(ix) max(ix[,7]) + 1),
+                           length  = sapply(segments[[i]], function(ix) max(ix[,7]) - min(ix[,7]) + 1),
                            value   = sapply(segments[[i]], function(ix) mean(ix[,3])),
                            area    = sapply(segments[[i]], function(ix) abs(sum(ix[,3]))),
                            cluster = sapply(segments[[i]], function(ix) ix[1,2]),

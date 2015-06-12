@@ -29,6 +29,7 @@ Date: 2015-05-23
 Maintainer: Xin Zhou <xinchoubiology@gmail.com>
 License: Artistic-2.0
 LazyData: TRUE
+ByteCompile: TRUE
 Depends: R (>= 2.8), genefilter, fastICA, qvalue, limma, foreach, plyr, doMC, 
          GenomicRanges, IRanges, data.table, stringr, ggplot2, reshape2, scales, RColorBrewer
 Suggests: limma, pamr, bladderbatch, BiocStyle,

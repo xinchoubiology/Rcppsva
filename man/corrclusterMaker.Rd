@@ -5,8 +5,9 @@
 \title{corrclusterMaker}
 \usage{
 corrclusterMaker(dat.m = NULL, chr, pos, cluster = NULL, maxGap = 500,
-  names, cutoff = 0.8, cores = 2, method = c("pearson", "spearman",
-  "kendall"), merge = c("single", "complete", "average"))
+  names, cutoff = 0.8, corrmat = NULL, cores = detectCores(),
+  method = c("pearson", "spearman", "kendall"), merge = c("single",
+  "complete", "average"))
 }
 \arguments{
 \item{dat.m}{n x m delta M|beta matrix for n CpG sites across 2*m paired different patient samples}
@@ -23,6 +24,8 @@ also used in function \link{clusterMaker}}
 \item{names}{probe names vector ; used in function \link{clusterMaker}}
 
 \item{cutoff}{threshold to filter distance based cluster; Default = 0.8}
+
+\item{corrmat}{correlation matrix for each cluster; Default NULL}
 
 \item{cores}{number of thread used by \link{corrclusterMaker}}
 
