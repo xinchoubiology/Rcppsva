@@ -1,7 +1,9 @@
 ## pipeline dependence package
 library(minfi)
 library(minfiData)
+library(sva)
 library(Rcppsva)
+library(stringr)
 
 ## minfiData has direction "extdata"
 ##                           |------ 2 Sentrix ID's Folder
@@ -16,7 +18,7 @@ list.files(file.path(baseDir, "5723646052"))  ## show different arrays
 
 ## targets
 targets <- read.450k.sheet(baseDir)  ## different sentrix ID means different Slides(Batch)
-                                     ## different sentrix position means different Array(not Batch)
+## different sentrix position means different Array(not Batch)
 
 ## read microArray data
 RGset   <- read.450k.exp(targets = targets)
@@ -63,7 +65,9 @@ plotBetasByType(mset.SWAN[,1], main = "SWAN")
 M <- getM(mset.SWAN, type = "Beta", offset = 100, betaThreshold = 0.000001)
 
 ## + person : Taking person pair information into account
-mod   <- model.matrix(~ status + person, data = pd)
+pheno.v  <- factor(pd$status, levels = c("normal", "cancer"))
+mod   <- model.matrix(~ pheno.v + person, data = pd)
+mod0  <- model.matrix(~ person, data = pd)
 
 mset.ComBat <- ComBat(dat = M, batch = pd$Slide, mod = mod, par.prior = FALSE)
 
@@ -74,17 +78,18 @@ mset.ComBat <- ComBat(dat = M, batch = pd$Slide, mod = mod, par.prior = FALSE)
 
 ## choose Combat-n cuz Paper: ChaoChen_PlosOne_2011
 ## after ComBat, we use SVA to learn all the other unmodel factors
-mset.SV <- isvaFn(dat.m = mset.ComBat, design = mod, type = "M", verbose = TRUE)
+## mset.SV <- isvaFn(dat.m = mset.ComBat, design = mod, type = "M", verbose = TRUE)
+n.sv <- num.sv(dat = mset.ComBat, mod = mod, method = "leek")
+mset.SV <- sva(dat = mset.ComBat, mod = mod, mod0 = mod0, n.sv = n.sv)
 
 ## calculate DMP(differential methylation position)
-pheno.v  <- factor(pd$status, levels = c("normal", "cancer"))
+## pheno.v  <- factor(pd$status, levels = c("normal", "cancer"))
 ## rank "cancer" followed by "normal" so estimated means cancer - normal
-mod   <- model.matrix(~ pheno.v + person, data = pd)
 
 ## test differential methylation(siggene) by linear regression on M data(link function from beta is logit)
 ## generally, siggene found by "NULL" method will be less that those found by "limma" eBayes method
-mset.DMP <- svaReg(dat.m = mset.ComBat, design = mod, sv.m = mset.SV$isv, qvalue0 = 0.05, backend = "NULL", verbose = TRUE)
-mset.DMP.limma <- svaReg(dat.m = mset.ComBat, design = mod, sv.m = mset.SV$isv, qvalue0 = 0.05, backend = "limma", verbose = TRUE)
+mset.DMP <- svaReg(dat.m = mset.ComBat, design = mod, sv.m = mset.SV$sv, qvalue0 = 0.05, backend = "NULL", verbose = TRUE)
+mset.DMP.limma <- svaReg(dat.m = mset.ComBat, design = mod, sv.m = mset.SV$sv, qvalue0 = 0.1, backend = "limma", verbose = TRUE)
 
 ## plot CpG
 cpgs <- rownames(mset.DMP.limma$null)[85680:85683]
@@ -164,15 +169,20 @@ regions <- regionSeeker(beta = B, chr = BED$chr, pos = BED$pos, maxGap = 1000, n
 
 ## permutation
 ## elapsed = 20.058 secs
+## tmp <- bootstrap.fit(dat.m = mset.ComBat, design = modsv, coef = 2, B = 100)
+## tmp1 <- mlm.fit(dat.m = mset.ComBat[1:10,], design = modsv, coef = 2, B = 10, full = TRUE)
+## tmp1$coef <- t(apply(tmp1$coef, 1, '/', t(tmp1$stdev_unscaled)))
+## tmp2 <- bootstrap.fit(dat.m = mset.ComBat[1:10,], design = modsv, coef = 2, B = 10)
+## tmp <- mlm.fit(dat.m = mset.ComBat, design = modsv, coef = 2, B = 100, full = TRUE)
+## tmp$coef <- t(apply(tmp$coef, 1, '/', t(tmp$stdev_unscaled)))
 tmp <- bootstrap.fit(dat.m = mset.ComBat, design = modsv, coef = 2, B = 100)
 permB   <- tmp$coef
 
-## 
+## segments extraction processing
 cutoff <- c(-quantile(abs(B), 0.8), -quantile(abs(B), 0.2), quantile(abs(B), 0.2), quantile(B, 0.8))
 segment_perm <- segmentsMaker(cluster, B, cutoff, genome$chr, start(genome), permB)
 
 regions_perm <- regionSeeker(beta = B, chr = BED$chr, pos = BED$pos, maxGap = 1000, permbeta = permB, names = rownames(BED), drop = TRUE)
-
 
 ##########################################################
 ## correlated regions extracted && test Dbpmerge function
@@ -184,24 +194,71 @@ pos <- BED[,2]
 names(pos) <- rownames(BED)
 
 ## corrmatrix calculation too slow
-registerDoMC(cores = 4)
+## working on 16 cores ~ 450 secs
+## Time difference of 8.203694 mins on 16 cores
+registerDoMC(cores = detectCores())
+
+start <- Sys.time()
+## -----
 corrmatrix  <- llply(multClust, .fun = function(ix){
   dist <- abs(outer(pos[ix], pos[ix], "-"))
-  colnames(dist) <- rownames(dist) <- ix
+  cor(t(mset.ComBat[ix,]), method = "spearman") * (dist <= 1000)
+}, .parallel = TRUE)
+## -----
+end <- Sys.time()
+
+
+## cluster by Dbpmerge
+## test on 4 cores ~ 55 secs for 55003 clusters  => 287288 clusters
+## But cluster contains more than one probes => 45203 clusters
+corregions <- Dbpmerge(corrmatrix, merge = "average", cutoff = 0.8)
+names(corregions) <- seq(1, length(corregions))
+corrClust  <- corregions[which(sapply(corregions, function(c) length(c) > 1))]
+
+## Visualization correlation
+corrHeatmap <- llply(corrClust[1:100], .fun = function(ix){
+  dist <- abs(outer(pos[ix], pos[ix], "-"))
   cor(t(mset.ComBat[ix,]), method = "spearman") * (dist <= 1000)
 }, .parallel = TRUE)
 
-## cluster by Dbpmerge
-corregions <- Dbpmerge(corrmatrix, merge = "average", cutoff = 0.8)
-## plot
-corrmat <- list(cor = corrmatrix[[17]])
-class(corrmat) <- "corr"
-plot(corrmat, cutoff = 0.8)
+## correlation visualization
+## cormatrix <- list(cor = corrHeatmap$`103.13`)
+## class(cormatrix) <- "corr"
+## plot(cormatrix, cutoff = 0.80)
 
 ## build correlated clusters
 ## for 1/4 probes ~ 403 secs => all probes 1600 secs
-idx <- rownames(mset.ComBat)
-system.time(corrcluster <<- corrclusterMaker(dat.m = mset.ComBat, chr = BED[idx,]$chr, pos = BED[idx,]$pos, names = rownames(BED[idx,]), maxGap = 1000, cutoff = 0.7, merge = "average", method = "spearman"))
 ## corrcluster <- corrclusterMaker(dat.m = mset.ComBat, chr = BED$chr, pos = BED$pos, names = rownames(BED), maxGap = 1000, cutoff = 0.8, merge = "average", method = "spearman")
+corrcluster <- c(corregions, rawCluster[-combIndex])
+names(corrcluster) <- seq(1, length(corrcluster))
 
+## robust estimation and p-value calculation
+tmpr <- mlm.fit(dat.m = mset.ComBat, design = modsv, coef = 2, B = NULL, full = TRUE)
+betar <- tmpr$coef
+sigmar <- tmpr$sigma
+fitr <- mlm.tstat(tmpr)
+tr   <- betar / fitr$post.sigma
+p   <- 2 * pmin(pt(tr, fitr$df.total), 1 - pt(tr, fitr$df.total))
 
+## get multiple-probe regions
+multiregions <- corrcluster[which(sapply(corrcluster, length) >= 2)]
+
+## normal cluster
+regions_perm <- regionSeeker(beta = B, chr = BED$chr, pos = BED$pos, cluster = cluster, maxGap = 1000, permbeta = permB, names = rownames(BED), drop = TRUE)
+
+## permcorregion
+corrcluster <- corrclusterMaker(dat.m = mset.ComBat, chr = BED$chr, pos = BED$pos, names = rownames(BED), corrmat = corrmatrix, maxGap = 1000, cutoff = 0.8, merge = "average", method = "spearman")
+corregion_perm <- regionSeeker(beta = B, chr = BED$chr, pos = BED$pos, cluster = corrcluster, maxGap = 1000, permbeta = permB, names = rownames(BED), drop = TRUE, mcores = 4)
+## test new data.table create method
+## time elapsed :  443.170 secs ~ 16 cores ~ 2 mins
+corregion_perm <- regionSeeker(beta = B, chr = BED$chr, pos = BED$pos, cluster = corrcluster, maxGap = 1000, permbeta = permB, names = rownames(BED), drop = TRUE, mcores = 4)
+
+## calculate out combine p-value regions
+## time on 16 cores = 70 secs/10,000 regions; ~ Total 3000 secs = 50 mins
+## cutoff increase, segments goes down. times -7 mins / -0.1 cutoff
+## Final total processing time = 5927.57 secs ~ 1.6 hrs and time elasped in combp = 2798.003
+## This implies me that tabulate is also a time-consuming step.
+combpregion <- combine.pvalue(dat.m = mset.ComBat, pvalues = p, cluster = corrclusters, chr = BED$chr, pos = BED$pos, names = rownames(BED), method = "spearman", combine = "stouffer_liptak")
+
+## smooth beta
+betas <- smoother(beta = betar, pos = BED$pos, names = rownames(BED), cluster = corrcluster, weight = sigmar, method = "weightedLowess")
