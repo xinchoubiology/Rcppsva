@@ -3,7 +3,7 @@
 ##' @exportMethod print
 setMethod("print", signature(x = "bumps"),
           function(x, ...){
-            cat(sprintf("'bumps' object with %d bumps\n", ncol(x@table)))
+            cat(sprintf("'bumps' object with %d bumps\n", ncol(x@table$diff)))
             cat(sprintf("algorithms : ...... \n"))
             for(params in names(x@algorithm)){
               cat(sprintf("\t%s = %s \n", params, x@algorithm[[params]]))
@@ -166,6 +166,10 @@ bumphuntingEngine <- function(dat.m = NULL, design, sv.m = NULL,
     region <- combine.pvalue(dat.m = dat.m, pvalues = p, cluster = cluster, chr = chr, pos = pos, names = names, method = method, combine = combine, weight = weight, cutoff = comb.cutoff)
   }
   
-  ## TODO return type will be bumps object
+  algorithm <- list(method = if(combp) combine else nullMethod, 
+                    smooth = if(smooth) "smoothMethod" else "NULL",
+                    correlation = if(corr) corFunc else "NULL",
+                    corrcutoff = if(corr) corr.cutoff else "NULL",
+                    bumpcitoff = comb.cutoff, cluster = merge)
   region
 }
