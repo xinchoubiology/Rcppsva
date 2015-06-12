@@ -11,7 +11,7 @@ setOldClass("print")
 ##' @exportClass bumps
 ##' @keywords classes 
 setClass("bumps",
-         representation = representation(table     = "list",
+         representation = representation(bumps     = "list",
                                          algorithm = "list")
 )
 

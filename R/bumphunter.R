@@ -3,7 +3,8 @@
 ##' @exportMethod print
 setMethod("print", signature(x = "bumps"),
           function(x, ...){
-            cat(sprintf("'bumps' object with %d bumps\n", ncol(x@table$diff)))
+            cat(sprintf("'bumps' object with %d DMR bumps\n", nrow(x@bumps$diff)))
+            cat(sprintf("'bumps' object with %d NULL H bumps for discriminative analysis\n", nrow(x@bumps$null)))
             cat(sprintf("algorithms : ...... \n"))
             for(params in names(x@algorithm)){
               cat(sprintf("\t%s = %s \n", params, x@algorithm[[params]]))
@@ -171,5 +172,6 @@ bumphuntingEngine <- function(dat.m = NULL, design, sv.m = NULL,
                     correlation = if(corr) corFunc else "NULL",
                     corrcutoff = if(corr) corr.cutoff else "NULL",
                     bumpcitoff = comb.cutoff, cluster = merge)
-  region
+  
+  new("bumps", algorithm = algorithm, bumps = region)
 }
