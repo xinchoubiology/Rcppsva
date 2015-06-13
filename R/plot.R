@@ -11,7 +11,7 @@
 #' require(IlluminaHumanMethylation450kanno.ilmn12.hg19)
 #' data(IlluminaHumanMethylation450kanno.ilmn12.hg19)
 #' @export
-print.bed <- function(x, bed = NULL, db = IlluminaHumanMethylation450kanno.ilmn12.hg19, ...){
+print.BED <- function(x, bed = NULL, db = IlluminaHumanMethylation450kanno.ilmn12.hg19, ...){
   dat.m <- x$table
   Location <- data.frame(db@data$Locations)
   Probes <- rownames(Location)[rownames(Location) %in% rownames(dat.m)]
