@@ -1,17 +1,17 @@
-##' estimate the dimension of Methylation status methylation by RMT
-##'
-##' @title estDimRMT
-##' @param dat.m n x m M|beta matrix for n CpG sites across m different patient samples.
-##' @param plot Optional bool value, plot eigenvalue distribution or not. Default = TRUE
-##' @return cor Cross correlation matrix across different samples
-##' @return dim Estimate dimension of data
-##' @return empeigen Empirical distribution of eigenvalue
-##' @return theigen Theoretical distribution of eigenvalue
-##' @return evalue Eigen values of correlation matrix
-##' @return ggplot Options ggplot2 object
-##' @import ggplot2
-##' @export
-##' @author Xin Zhou \url{xinchoubiology@@gmail.com}
+#' estimate the dimension of Methylation status methylation by RMT
+#'
+#' @title estDimRMT
+#' @param dat.m n x m M|beta matrix for n CpG sites across m different patient samples.
+#' @param plot Optional bool value, plot eigenvalue distribution or not. Default = TRUE
+#' @return cor Cross correlation matrix across different samples
+#' @return dim Estimate dimension of data
+#' @return empeigen Empirical distribution of eigenvalue
+#' @return theigen Theoretical distribution of eigenvalue
+#' @return evalue Eigen values of correlation matrix
+#' @return ggplot Options ggplot2 object
+#' @import ggplot2
+#' @export
+#' @author Xin Zhou \url{xinchoubiology@@gmail.com}
 estDimRMT <- function(dat.m, plot = TRUE){
   ## transform value to "M"
   ## normalize by each column
@@ -75,18 +75,18 @@ estDimRMT <- function(dat.m, plot = TRUE){
   }
 }
 
-##' isvaFunction
-##'
-##' @title isvaFn
-##' @param dat.m Data matrix whose rows represent different labeling features and columns stand for the different samples
-##' @param design design matrix for expression/methylation microarray
-##' @param qcutoff qvalue's cutoff, control the FDR(false discovery rate)
-##' @return n.isv number of ISVs
-##' @return isv matrix of ISV
-##' @export
-##' @importFrom qvalue qvalue
-##' @importFrom fastICA fastICA
-##' @author Xin Zhou \url{xinchoubiology@@gmail.com}
+#' isvaFunction
+#'
+#' @title isvaFn
+#' @param dat.m Data matrix whose rows represent different labeling features and columns stand for the different samples
+#' @param design design matrix for expression/methylation microarray
+#' @param qcutoff qvalue's cutoff, control the FDR(false discovery rate)
+#' @return n.isv number of ISVs
+#' @return isv matrix of ISV
+#' @export
+#' @importFrom qvalue qvalue
+#' @importFrom fastICA fastICA
+#' @author Xin Zhou \url{xinchoubiology@@gmail.com}
 isvaFn <- function(dat.m = NULL, design = NULL, type = c("M", "beta"), qcutoff = 0.05, verbose = FALSE){
   type <- match.arg(type)
   if(type == "beta"){
@@ -135,24 +135,24 @@ isvaFn <- function(dat.m = NULL, design = NULL, type = c("M", "beta"), qcutoff =
   return(list(n.sv = ncomp, sv = isv.m))
 }
 
-##' svaReg Do regression with selected surrogate variables
-##' 
-##' @title svaReg
-##' @description when we search all of the factors which means surrogate variables 
-##'              update our model.matrix and calculate moderate test
-##' @param dat.m n x m M|beta matrix for n CpG sites across m different patient samples.
-##' @param design phenotype of interested; m-length vector reresent patient samples' phenotype.
-##'        Optional: [combine with sample pair information] and mandatory column 2 is covariate
-##'        of interest
-##' @param sv.m  surrogate variables matrix calculate from \link{isvaFn} other sva methods.
-##' @param qvalue0 false discovery rate's threshold; Default = 0.1
-##' @param backend backend regression packages; Default = "NULL", switch to limma for moderate statistic
-##' @param verbose Optional; Default FALSE
-##' @importFrom limma lmFit eBayes contrasts.fit
-##' @importFrom qvalue qvalue
-##' @return res data.frame
-##' @export
-##' @author Xin Zhou \url{xinchoubiology@@gmail.com}
+#' svaReg Do regression with selected surrogate variables
+#' 
+#' @title svaReg
+#' @description when we search all of the factors which means surrogate variables 
+#'              update our model.matrix and calculate moderate test
+#' @param dat.m n x m M|beta matrix for n CpG sites across m different patient samples.
+#' @param design phenotype of interested; m-length vector reresent patient samples' phenotype.
+#'        Optional: [combine with sample pair information] and mandatory column 2 is covariate
+#'        of interest
+#' @param sv.m  surrogate variables matrix calculate from \link{isvaFn} other sva methods.
+#' @param qvalue0 false discovery rate's threshold; Default = 0.1
+#' @param backend backend regression packages; Default = "NULL", switch to limma for moderate statistic
+#' @param verbose Optional; Default FALSE
+#' @importFrom limma lmFit eBayes contrasts.fit
+#' @importFrom qvalue qvalue
+#' @return res data.frame
+#' @export
+#' @author Xin Zhou \url{xinchoubiology@@gmail.com}
 svaReg <- function(dat.m = NULL, design = NULL, sv.m = NULL, qvalue0 = 0.1, backend = c("NULL", "limma"), verbose = FALSE){
   backend <- match.arg(backend)
   if(is.null(sv.m)){

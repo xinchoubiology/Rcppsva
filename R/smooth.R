@@ -1,21 +1,21 @@
 ## smoother functions for beta value have uniform callable 
 ## smoother(beta, chr, pos, cluster, names, weight, verbose = TRUE)
 
-##' robust local weighted regression, fitting a smooth nonparamatic regression
-##' and smoothing methylation measurement.
-##' 
-##' @title smoother
-##' @param beta beta value for probes
-##' @param pos position vector
-##' @param names probe names vector ; used in function \link{clusterMaker} and \link{regionSeeker}
-##' @param cluster cluster object for local regression
-##' @param weight weight for local regression
-##' @param method c("weightedLowess", "loess", "locfit")
-##' @param mcores thread used in function
-##' @importFrom limma loessFit
-##' @importFrom parallel detectCores
-##' @importFrom doMC registerDoMC
-##' @export
+#' robust local weighted regression, fitting a smooth nonparamatic regression
+#' and smoothing methylation measurement.
+#' 
+#' @title smoother
+#' @param beta beta value for probes
+#' @param pos position vector
+#' @param names probe names vector ; used in function \link{clusterMaker} and \link{regionSeeker}
+#' @param cluster cluster object for local regression
+#' @param weight weight for local regression
+#' @param method c("weightedLowess", "loess", "locfit")
+#' @param mcores thread used in function
+#' @importFrom limma loessFit
+#' @importFrom parallel detectCores
+#' @importFrom doMC registerDoMC
+#' @export
 smoother <- function(beta, pos, names, cluster, weight, 
                      method = c("weightedLowess", "loess", "locfit"),
                      mcores = detectCores()){

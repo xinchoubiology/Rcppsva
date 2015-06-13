@@ -1,30 +1,30 @@
-##' calculation combination pvalue of given regions(pvalues within region are correlated)
-##' 
-##' @title combine.pvalue
-##' @description combine-pvalue accepts a list of pvalues of probes, and correlation matrices
-##'              are claculated by input data matrix. Then, it estimate combined pvalue for
-##'              candidate regions defined in input region list
-##' @param dat.m n x m delta M|beta matrix for n CpG sites across 2*m paired different patient samples
-##' @param pvalues pvalue column vector for each probe
-##' @param cluster correlated cluster list calculated by \link{corrclusterMaker}
-##'        cluster list contains: {single probe cluster, multiple probes cluster}
-##' @param chr chromosome vector
-##' @param pos position vector
-##' @param names probe names vector ; used in function \link{clusterMaker}
-##' @param method correlation calculation method; c("spearman", "pearson", "kendall"); Default "spearman"
-##' @param combine combine pvalue method; c("stouffer_liptak", "zscore")
-##' @param weight NULL; weight provided as \code{1/sigma} of each probe. It means each probe's contribution 
-##'        to defined regions
-##' @param cutoff cutoff for dmr(differential methylated regions) detection's qvalue(fdr); 
-##'        Default 0.1
-##' @param cores core number for R backend combp algorithm
-##' @return combine-pval
-##' @importFrom plyr llply
-##' @importFrom qvalue qvalue
-##' @importFrom parallel detectCores
-##' @importFrom doMC registerDoMC
-##' @import data.table
-##' @export
+#' calculation combination pvalue of given regions(pvalues within region are correlated)
+#' 
+#' @title combine.pvalue
+#' @description combine-pvalue accepts a list of pvalues of probes, and correlation matrices
+#'              are claculated by input data matrix. Then, it estimate combined pvalue for
+#'              candidate regions defined in input region list
+#' @param dat.m n x m delta M|beta matrix for n CpG sites across 2*m paired different patient samples
+#' @param pvalues pvalue column vector for each probe
+#' @param cluster correlated cluster list calculated by \link{corrclusterMaker}
+#'        cluster list contains: {single probe cluster, multiple probes cluster}
+#' @param chr chromosome vector
+#' @param pos position vector
+#' @param names probe names vector ; used in function \link{clusterMaker}
+#' @param method correlation calculation method; c("spearman", "pearson", "kendall"); Default "spearman"
+#' @param combine combine pvalue method; c("stouffer_liptak", "zscore")
+#' @param weight NULL; weight provided as \code{1/sigma} of each probe. It means each probe's contribution 
+#'        to defined regions
+#' @param cutoff cutoff for dmr(differential methylated regions) detection's qvalue(fdr); 
+#'        Default 0.1
+#' @param cores core number for R backend combp algorithm
+#' @return combine-pval
+#' @importFrom plyr llply
+#' @importFrom qvalue qvalue
+#' @importFrom parallel detectCores
+#' @importFrom doMC registerDoMC
+#' @import data.table
+#' @export
 combine.pvalue <- function(dat.m = NULL, pvalues, cluster, chr, pos, names,
                            method = c("spearman", "pearson", "kendall"), 
                            combine = c("stouffer_liptak", "zscore"),
@@ -81,17 +81,17 @@ combine.pvalue <- function(dat.m = NULL, pvalues, cluster, chr, pos, names,
   return(res)
 }
 
-##' 2 combp functions are borrowed from Combp value function of brentp
-##' 
-##' Calculate combined p-value by stouffer_liptak method
-##' 
-##' @title stouffer_liptak.combp
-##' @param pvalues vector of pvalues
-##' @param sigma covariance of pvalue
-##' @param weight use weight for pvalue combination; Default NULL
-##' @details if \code{sigma} is not positive definitive, off-diag elements x 0.99
-##' @return Cp (Combined pvalue)
-##' @export
+#' 2 combp functions are borrowed from Combp value function of brentp
+#' 
+#' Calculate combined p-value by stouffer_liptak method
+#' 
+#' @title stouffer_liptak.combp
+#' @param pvalues vector of pvalues
+#' @param sigma covariance of pvalue
+#' @param weight use weight for pvalue combination; Default NULL
+#' @details if \code{sigma} is not positive definitive, off-diag elements x 0.99
+#' @return Cp (Combined pvalue)
+#' @export
 stouffer_liptak.combp <- function(pvalues, sigma, weight = NULL){
   qvalues <- qnorm(pvalues, mean = 0, sd = 1, lower.tail = TRUE)
   C <- try(chol(sigma), silent = TRUE)
@@ -108,15 +108,15 @@ stouffer_liptak.combp <- function(pvalues, sigma, weight = NULL){
   return(pnorm(Cq, lower.tail = TRUE))
 }
 
-##' Calculate the combined pvalue by combined Z score method
-##' 
-##' @title zscore.combp
-##' @param pvalues vector of pvalues
-##' @param sigma covariance of pvalue
-##' @param weight use weight for pvalue combination; Default NULL
-##' @details if \code{sigma} is not positive definitive, off-diag elements x 0.99
-##' @return Cp (Combined pvalue)
-##' @export
+#' Calculate the combined pvalue by combined Z score method
+#' 
+#' @title zscore.combp
+#' @param pvalues vector of pvalues
+#' @param sigma covariance of pvalue
+#' @param weight use weight for pvalue combination; Default NULL
+#' @details if \code{sigma} is not positive definitive, off-diag elements x 0.99
+#' @return Cp (Combined pvalue)
+#' @export
 zscore.combp <- function(pvalues, sigma, weight = NULL){
   if(is.null(weight)){
     z <- weighted.mean(qnorm(pvalues, lower.tail = TRUE), weight)

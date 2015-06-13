@@ -1,16 +1,16 @@
-##' out.R is used to print/plot data object in Rcppsva to validation
-##' output 450k microarray data frame with ordered positions to BED file
-##' 
-##' @rdname print
-##' @param x m x n matrix. Statitical test p-value and each row's name is its probes name
-##' @param ... bed BED file name
-##'            db  Database of probes
-##' @return BED data.frame
-##' @method print bed
-##' @examples 
-##' require(IlluminaHumanMethylation450kanno.ilmn12.hg19)
-##' data(IlluminaHumanMethylation450kanno.ilmn12.hg19)
-##' @export
+#' out.R is used to print/plot data object in Rcppsva to validation
+#' output 450k microarray data frame with ordered positions to BED file
+#' 
+#' @rdname print
+#' @param x m x n matrix. Statitical test p-value and each row's name is its probes name
+#' @param ... bed BED file name
+#'            db  Database of probes
+#' @return BED data.frame
+#' @method print bed
+#' @examples 
+#' require(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+#' data(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+#' @export
 print.bed <- function(x, bed = NULL, db = IlluminaHumanMethylation450kanno.ilmn12.hg19, ...){
   dat.m <- x$table
   Location <- data.frame(db@data$Locations)
@@ -30,24 +30,24 @@ print.bed <- function(x, bed = NULL, db = IlluminaHumanMethylation450kanno.ilmn1
   cat(sprintf("... %d rows are omitted", nrow(BED) - 5))
 }
 
-##' plot correlation matrix by ggplot
-##'
-##' @rdname plot
-##' @param x n x n correlation matrix
-##' @param y NULL
-##' @param cutoff correlation cutoff; Default = 0.8
-##' @return ggplot object
-##' @method plot corr
-##' @importFrom reshape2 melt
-##' @import ggplot2
-##' @import scales
-##' @import RColorBrewer
-##' @examples
-##' corrmat <- list(cor = matrix(c(-0.9,-0.6,0.3,1), nrow = 2))
-##' colnames(corrmat$cor) <- rownames(corrmat$cor) <- c("X1","X2")
-##' class(corrmat) <- "corr"
-##' plot(corrmat)
-##' @export
+#' plot correlation matrix by ggplot
+#'
+#' @rdname plot
+#' @param x n x n correlation matrix
+#' @param y NULL
+#' @param cutoff correlation cutoff; Default = 0.8
+#' @return ggplot object
+#' @method plot corr
+#' @importFrom reshape2 melt
+#' @import ggplot2
+#' @import scales
+#' @import RColorBrewer
+#' @examples
+#' corrmat <- list(cor = matrix(c(-0.9,-0.6,0.3,1), nrow = 2))
+#' colnames(corrmat$cor) <- rownames(corrmat$cor) <- c("X1","X2")
+#' class(corrmat) <- "corr"
+#' plot(corrmat)
+#' @export
 plot.corr <- function(x, y = NULL, cutoff = 0.8, ...){
   if(!is.null(y)){
     stop("y object in plot.corr must be NULL")

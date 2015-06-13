@@ -39,27 +39,27 @@ it.sol  <- function(sdat,g.hat,d.hat,g.bar,t2,a,b,conv=.0001){
   adjust
 }
 
-##' Monte Carlo integration functions
-##' @param sdata standard data matrix
-##' @param g.hat estimated gamma values
-##' @param d.hat estimated delta values
-##' @return adjust data frame
-##'         g.star
-##'         d.star
+#' Monte Carlo integration functions
+#' @param sdata standard data matrix
+#' @param g.hat estimated gamma values
+#' @param d.hat estimated delta values
+#' @return adjust data frame
+#'         g.star
+#'         d.star
 int.eprior <- function(sdat,g.hat,d.hat){
   adjust <-  do.call(rbind, int_eprior(sdat, g.hat, d.hat))
   adjust
 }
 
-##' Quick calculate f statistic p-values for mod and mod0
-##' @title pvalue
-##' @param dat.m data matrix for expression/methylation microarray
-##' @param mod the model being used to fit the data
-##' @param mod0 the null hypothesis model being compared when fitting the data
-##' @param verbose Optional; Default FALSE
-##' @return p vector of F-statistic p-values for each row of dat
-##' @export
-##' @author Xin Zhou
+#' Quick calculate f statistic p-values for mod and mod0
+#' @title pvalue
+#' @param dat.m data matrix for expression/methylation microarray
+#' @param mod the model being used to fit the data
+#' @param mod0 the null hypothesis model being compared when fitting the data
+#' @param verbose Optional; Default FALSE
+#' @return p vector of F-statistic p-values for each row of dat
+#' @export
+#' @author Xin Zhou
 pvalue <- function(dat.m = NULL, mod = NULL, mod0 = NULL, ...){
   df1 <- ncol(dat.m) - dim(mod)[2]
   df0 <- ncol(dat.m) - dim(mod0)[2]
@@ -77,34 +77,34 @@ pvalue <- function(dat.m = NULL, mod = NULL, mod0 = NULL, ...){
   p
 }
 
-##' estimate coefficient of interest variables with known Svs, \link{mlm.tstat}
-##' 
-##' @title mlm.fit
-##' @param dat.m n x m matrix of methylation microarray
-##' @param design design matrix for expression data matrix(data.m)
-##' @param coef covariate of interest; Default = 2
-##' @param B permutation number of covariates of interest
-##' @param full return full regression object; Optional FALSE
-##' @return list
-##'         coefficient
-##'         stdev_unscale
-##'         sigma
-##'         df.residule
-##' @export
-##' @importFrom doMC registerDoMC
-##' @examples
-##' sd <- 0.3 * sqrt(4/rchisq(100, df = 4))
-##' y  <- matrix(rnorm(100*6, sd = sd), 100, 6)  # each row of data is generate by sd[i] ~ invchisq
-##' rownames(y) <- paste("cg", 1:100)
-##' # introduce 2 cgs which are DMPs 
-##' y[1:2, 4:6] <- y[1:2, 4:6] + 2 # have significant differential when we introduce the poi(cancer - normal)
-##' pheno <- factor(c(0,0,0,1,1,1))
-##' levels(pheno) <- c("normal", "cancer")
-##' design <- model.matrix(~ pheno)
-##' fit <- mlm.fit(y, design)
-##' sig.tab <- mlm.tstat(fit)
-##' library(doMC)
-##' registerDoMC(2)
+#' estimate coefficient of interest variables with known Svs, \link{mlm.tstat}
+#' 
+#' @title mlm.fit
+#' @param dat.m n x m matrix of methylation microarray
+#' @param design design matrix for expression data matrix(data.m)
+#' @param coef covariate of interest; Default = 2
+#' @param B permutation number of covariates of interest
+#' @param full return full regression object; Optional FALSE
+#' @return list
+#'         coefficient
+#'         stdev_unscale
+#'         sigma
+#'         df.residule
+#' @export
+#' @importFrom doMC registerDoMC
+#' @examples
+#' sd <- 0.3 * sqrt(4/rchisq(100, df = 4))
+#' y  <- matrix(rnorm(100*6, sd = sd), 100, 6)  # each row of data is generate by sd[i] ~ invchisq
+#' rownames(y) <- paste("cg", 1:100)
+#' # introduce 2 cgs which are DMPs 
+#' y[1:2, 4:6] <- y[1:2, 4:6] + 2 # have significant differential when we introduce the poi(cancer - normal)
+#' pheno <- factor(c(0,0,0,1,1,1))
+#' levels(pheno) <- c("normal", "cancer")
+#' design <- model.matrix(~ pheno)
+#' fit <- mlm.fit(y, design)
+#' sig.tab <- mlm.tstat(fit)
+#' library(doMC)
+#' registerDoMC(2)
 mlm.fit <- function(dat.m = NULL, design = NULL, coef = 2, B = NULL, full = FALSE, mcore = 4){
   x0 <- design[,coef, drop = FALSE]
   xb <- design[,-coef, drop = FALSE]
@@ -128,18 +128,18 @@ mlm.fit <- function(dat.m = NULL, design = NULL, coef = 2, B = NULL, full = FALS
   result
 }
 
-##' bootstrap wrapper
-##' 
-##' @title bootstrap.fit
-##' @param dat.m n x m matrix of methylation microarray
-##' @param design design matrix for expression data matrix(data.m)
-##' @param coef covariate of interest; Default = 2
-##' @param B permutation number of covariates of interest
-##' @return list
-##'         coefficient
-##'         sigma
-##'         df.residule
-##' @export
+#' bootstrap wrapper
+#' 
+#' @title bootstrap.fit
+#' @param dat.m n x m matrix of methylation microarray
+#' @param design design matrix for expression data matrix(data.m)
+#' @param coef covariate of interest; Default = 2
+#' @param B permutation number of covariates of interest
+#' @return list
+#'         coefficient
+#'         sigma
+#'         df.residule
+#' @export
 bootstrap.fit <- function(dat.m = NULL, design = NULL, coef = 2, B = NULL){
   mod   <- design
   mod0  <- design[,-coef,drop=FALSE]
@@ -155,14 +155,14 @@ bootstrap.fit <- function(dat.m = NULL, design = NULL, coef = 2, B = NULL){
   result
 }
 
-##' moderest lm T statistic
-##' @title mlm.tstat
-##' @param fit object of mlm.fit; contains coefficient, sigma
-##' @return list of 2 components
-##'         post.sigma
-##'         df.total
-##'         t score
-##' @export
+#' moderest lm T statistic
+#' @title mlm.tstat
+#' @param fit object of mlm.fit; contains coefficient, sigma
+#' @return list of 2 components
+#'         post.sigma
+#'         df.total
+#'         t score
+#' @export
 mlm.tstat <- function(fit){
   s2 <- apply(fit$sigma^2, 2, limma::squeezeVar, fit$df.residuals)
   B  <- ncol(fit$coef)
@@ -175,24 +175,24 @@ mlm.tstat <- function(fit){
   return(list(post.sigma = post.sigma, df.total = df.total))
 }
 
-##' If our data is paired, wilcoxon rank test can be used to test the significnat of sites
-##' 
-##' @title wilcox.fit
-##' @description calculate wolcoxon signed rank sum test for each CpG probes of microarray;
-##'              support multiple core parallism calculation.
-##' @param dat.m n x m delta M|beta matrix for n CpG sites across 2*m paired different patient samples
-##' @param alternative a character string specifying the alternative hypothesis; 
-##'        c("two.sided", "greater", "less") and "two.sided" is default
-##' @param qvalue0 false discovery rate's threshold; Default = 0.1
-##' @param mcore Cpu cores can be used in test
-##' @return res list
-##'             siggene data.frame
-##'             null    data.frame
-##' @importFrom doMC registerDoMC
-##' @importFrom plyr aaply
-##' @importFrom qvalue qvalue
-##' @export
-##' @author Xin Zhou
+#' If our data is paired, wilcoxon rank test can be used to test the significnat of sites
+#' 
+#' @title wilcox.fit
+#' @description calculate wolcoxon signed rank sum test for each CpG probes of microarray;
+#'              support multiple core parallism calculation.
+#' @param dat.m n x m delta M|beta matrix for n CpG sites across 2*m paired different patient samples
+#' @param alternative a character string specifying the alternative hypothesis; 
+#'        c("two.sided", "greater", "less") and "two.sided" is default
+#' @param qvalue0 false discovery rate's threshold; Default = 0.1
+#' @param mcore Cpu cores can be used in test
+#' @return res list
+#'             siggene data.frame
+#'             null    data.frame
+#' @importFrom doMC registerDoMC
+#' @importFrom plyr aaply
+#' @importFrom qvalue qvalue
+#' @export
+#' @author Xin Zhou
 wilcox.fit <- function(dat.m = NULL, alternative = c("two.sided", "greater", "less"), qvalue0 = 0.1, mcore = 4){
   alternative <- match.arg(alternative)
   registerDoMC(cores = mcore)
@@ -230,26 +230,26 @@ wilcox.fit <- function(dat.m = NULL, alternative = c("two.sided", "greater", "le
   res
 }
 
-##' clusterMaker function based on spatial distance
-##'
-##' @title clusterMaker
-##' @param chr Chromosome vector
-##' @param pos position numeric vector
-##' @param maxGap max gap length between 2 probes within a region
-##' @param names probe names vector
-##' @return cluster data.frame of length m(m probes). Probes within same region have same region identities list.
-##' @importFrom plyr llply
-##' @import GenomicRanges
-##' @details If you define the maxGap 500, so we can guarantee probes in different regions has distance >= maxGap.
-##'          As the result, if we extend region upstream & downstream maxGap / 2, our extended regions have no overlap
-##' @examples 
-##' require(IlluminaHumanMethylation450kanno.ilmn12.hg19)
-##' Location <- data.frame(IlluminaHumanMethylation450kanno.ilmn12.hg19@@data$Locations)
-##' Probes <- rownames(Location)[rownames(Location) %in% rownames(dat.m)]
-##' BED <- cbind(Location[Probes, 1:2])
-##' BED <- cbind(BED, dat.m[Probes, 4:3])
-##' cluster <- clusterMaker(chr = BED$chr, pos = BED$pos, maxGap = 1000, names = rownames(BED))
-##' @export
+#' clusterMaker function based on spatial distance
+#'
+#' @title clusterMaker
+#' @param chr Chromosome vector
+#' @param pos position numeric vector
+#' @param maxGap max gap length between 2 probes within a region
+#' @param names probe names vector
+#' @return cluster data.frame of length m(m probes). Probes within same region have same region identities list.
+#' @importFrom plyr llply
+#' @import GenomicRanges
+#' @details If you define the maxGap 500, so we can guarantee probes in different regions has distance >= maxGap.
+#'          As the result, if we extend region upstream & downstream maxGap / 2, our extended regions have no overlap
+#' @examples 
+#' require(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+#' Location <- data.frame(IlluminaHumanMethylation450kanno.ilmn12.hg19@@data$Locations)
+#' Probes <- rownames(Location)[rownames(Location) %in% rownames(dat.m)]
+#' BED <- cbind(Location[Probes, 1:2])
+#' BED <- cbind(BED, dat.m[Probes, 4:3])
+#' cluster <- clusterMaker(chr = BED$chr, pos = BED$pos, maxGap = 1000, names = rownames(BED))
+#' @export
 clusterMaker <- function(chr, pos, maxGap = 500, names){
   genome     <- GRanges(seqnames = chr, ranges = IRanges::IRanges(start = pos, width = 1), names = names)
   seqlevels(genome) <- sort(seqlevels(genome))
@@ -266,31 +266,31 @@ clusterMaker <- function(chr, pos, maxGap = 500, names){
   cluster
 }
 
-##' correlated cluster maker. Build the CpG cluster by correlation
-##' 
-##' @description By \code{clusterMaker}, we can generate probe cluster under constraint of maximum 
-##'              distance. Adding the correlation constraint, we will truncate exsited cluster and
-##'              calculate their correlation matrix \code{sigma} out
-##' @title corrclusterMaker
-##' @param dat.m n x m delta M|beta matrix for n CpG sites across 2*m paired different patient samples
-##' @param chr Chromosome vector
-##' @param pos position numeric vector
-##' @param cluster vector of probes clusters By distance(maxGap) constraints
-##' @param names probe names vector ; used in function \link{clusterMaker}
-##' @param maxGap max gap length between 2 probes within a region ; Default = 500
-##'        also used in function \link{clusterMaker}
-##' @param cutoff threshold to filter distance based cluster; Default = 0.8
-##' @param method correlation calculation method; c("spearman", "pearson", "kendall"); Default "spearman"
-##' @param merge how to merge two sub-clusters; c("single", "complete", "average")
-##' @param pos CpG position with their probes id
-##' @param corrmat correlation matrix for each cluster; Default NULL
-##' @param cores number of thread used by \link{corrclusterMaker}
-##' @details only clusters contain >= 2 probes can get a corrected p-value
-##' @return list of clusterID vector
-##' @importFrom plyr llply
-##' @importFrom doMC registerDoMC
-##' @importFrom parallel detectCores
-##' @export
+#' correlated cluster maker. Build the CpG cluster by correlation
+#' 
+#' @description By \code{clusterMaker}, we can generate probe cluster under constraint of maximum 
+#'              distance. Adding the correlation constraint, we will truncate exsited cluster and
+#'              calculate their correlation matrix \code{sigma} out
+#' @title corrclusterMaker
+#' @param dat.m n x m delta M|beta matrix for n CpG sites across 2*m paired different patient samples
+#' @param chr Chromosome vector
+#' @param pos position numeric vector
+#' @param cluster vector of probes clusters By distance(maxGap) constraints
+#' @param names probe names vector ; used in function \link{clusterMaker}
+#' @param maxGap max gap length between 2 probes within a region ; Default = 500
+#'        also used in function \link{clusterMaker}
+#' @param cutoff threshold to filter distance based cluster; Default = 0.8
+#' @param method correlation calculation method; c("spearman", "pearson", "kendall"); Default "spearman"
+#' @param merge how to merge two sub-clusters; c("single", "complete", "average")
+#' @param pos CpG position with their probes id
+#' @param corrmat correlation matrix for each cluster; Default NULL
+#' @param cores number of thread used by \link{corrclusterMaker}
+#' @details only clusters contain >= 2 probes can get a corrected p-value
+#' @return list of clusterID vector
+#' @importFrom plyr llply
+#' @importFrom doMC registerDoMC
+#' @importFrom parallel detectCores
+#' @export
 corrclusterMaker <- function(dat.m = NULL, chr, pos, cluster = NULL, 
                              maxGap = 500, names, cutoff = 0.8, 
                              corrmat = NULL, cores = detectCores(),
@@ -332,15 +332,15 @@ corrclusterMaker <- function(dat.m = NULL, chr, pos, cluster = NULL,
   cluster
 }
 
-##' sub-regions merge and split
-##' 
-##' @title Dbpmerge
-##' @param c.mat list of correlation probes matrices
-##' @param merge merge method; c("single", "complete", "average")
-##' @param cutoff correlation >= cutoff can be merge into a sub-regions
-##' @return list of all sub-clusters
-##' @importFrom plyr llply
-##' @export
+#' sub-regions merge and split
+#' 
+#' @title Dbpmerge
+#' @param c.mat list of correlation probes matrices
+#' @param merge merge method; c("single", "complete", "average")
+#' @param cutoff correlation >= cutoff can be merge into a sub-regions
+#' @return list of all sub-clusters
+#' @importFrom plyr llply
+#' @export
 Dbpmerge <- function(c.mat = NULL, merge = c("single", "complete", "average"), cutoff = 0.8){
   merge <- match.arg(merge)
   corrcluster <- llply(c.mat, .fun = function(mx){
@@ -358,25 +358,25 @@ Dbpmerge <- function(c.mat = NULL, merge = c("single", "complete", "average"), c
 
 
 
-##' segment vectors into positive, null and negative
-##' 
-##' @title segmentsMaker
-##' @param cluster vector of probes clusters
-##' @param beta beta value for probes
-##' @param chr chromosome vector
-##' @param pos position vector
-##' @param cutoff cutoff value for positive & negative value; 
-##'        <= cutoff[1] : hypo 
-##'        >= cutoff[4] : hyper
-##'        (cutoff[2], cutoff[3]) : null
-##' @param permbeta null hypothesis distribution
-##' @return cluster list and each cluster contains 3 list
-##'         `hyper`| `+`
-##'         `hypo` | `-`
-##'         `null` | `0`
-##' @details bumphunting kernel; and we can use comb-p method in segmentMaker.
-##' @import data.table
-##' @export
+#' segment vectors into positive, null and negative
+#' 
+#' @title segmentsMaker
+#' @param cluster vector of probes clusters
+#' @param beta beta value for probes
+#' @param chr chromosome vector
+#' @param pos position vector
+#' @param cutoff cutoff value for positive & negative value; 
+#'        <= cutoff[1] : hypo 
+#'        >= cutoff[4] : hyper
+#'        (cutoff[2], cutoff[3]) : null
+#' @param permbeta null hypothesis distribution
+#' @return cluster list and each cluster contains 3 list
+#'         `hyper`| `+`
+#'         `hypo` | `-`
+#'         `null` | `0`
+#' @details bumphunting kernel; and we can use comb-p method in segmentMaker.
+#' @import data.table
+#' @export
 segmentsMaker <- function(cluster, beta, cutoff, chr, pos, permbeta){
   cnames <- names(cluster)
   all <- ((beta >= cutoff[4]) - (beta <= cutoff[1]) + 2 * (beta >= cutoff[2]) * (beta <= cutoff[3]))[cnames,]
@@ -398,29 +398,29 @@ segmentsMaker <- function(cluster, beta, cutoff, chr, pos, permbeta){
   segments
 }
 
-##' bump hunting algorithm one clusters predefined by distance/correlation constraints
-##' 
-##' @title regionSeeker
-##' @param beta vector of different probes
-##' @param chr Chromosome vector
-##' @param pos position numeric vector
-##' @param cluster list clusters defined by arguments or \link{clusterMaker}
-##' @param maxGap max gap length between 2 probes within a region ; 
-##'        used in function \link{clusterMaker}
-##' @param names probe names vector ; used in function \link{clusterMaker}
-##' @param cutoff cutoff threshold for bump selection. only segements within cluster satisfy cutoff
-##'        are returned as predicted region c(sig-cutoff, null-cutoff)
-##' @param permbeta Null hypothesis beta distribution 
-##'        [added permbeta(H0 distribution) to the end columns of region table from \link{regionSeeker}]
-##' @param drop FALSE; create discriminate table (significant | null) or not
-##' @param mcores multiple threads used in \link{regionSeeker}
-##' @param verbose FALSE
-##' @details If an arbitary threshold is defined, regionSeeker will return a table (within / without)
-##'          the threshold. In bump hunting algorithms, these contiguous probes mean bumps.
-##' @import GenomicRanges
-##' @import data.table
-##' @return Table of predict regions
-##' @export
+#' bump hunting algorithm one clusters predefined by distance/correlation constraints
+#' 
+#' @title regionSeeker
+#' @param beta vector of different probes
+#' @param chr Chromosome vector
+#' @param pos position numeric vector
+#' @param cluster list clusters defined by arguments or \link{clusterMaker}
+#' @param maxGap max gap length between 2 probes within a region ; 
+#'        used in function \link{clusterMaker}
+#' @param names probe names vector ; used in function \link{clusterMaker}
+#' @param cutoff cutoff threshold for bump selection. only segements within cluster satisfy cutoff
+#'        are returned as predicted region c(sig-cutoff, null-cutoff)
+#' @param permbeta Null hypothesis beta distribution 
+#'        [added permbeta(H0 distribution) to the end columns of region table from \link{regionSeeker}]
+#' @param drop FALSE; create discriminate table (significant | null) or not
+#' @param mcores multiple threads used in \link{regionSeeker}
+#' @param verbose FALSE
+#' @details If an arbitary threshold is defined, regionSeeker will return a table (within / without)
+#'          the threshold. In bump hunting algorithms, these contiguous probes mean bumps.
+#' @import GenomicRanges
+#' @import data.table
+#' @return Table of predict regions
+#' @export
 regionSeeker <- function(beta, chr, pos, cluster = NULL, maxGap = 500, names, 
                          cutoff = c(quantile(abs(beta), 0.9), quantile(abs(beta), 0.1)),
                          permbeta = NULL, mcores = 2,
@@ -476,9 +476,9 @@ regionSeeker <- function(beta, chr, pos, cluster = NULL, maxGap = 500, names,
   return(res)
 }
 
-##' fitting L/S model with missing values
-##' @description Beta.NA function is borrow from package sva
-##' @title Beta.NA
+#' fitting L/S model with missing values
+#' @description Beta.NA function is borrow from package sva
+#' @title Beta.NA
 Beta.NA <- function(y,X){
   des <- X[!is.na(y),]
   y1 <- y[!is.na(y)]
@@ -486,9 +486,9 @@ Beta.NA <- function(y,X){
   B
 }
 
-##' get contains NA's row, col
-##' @description Index.NA function is borrow from package sva
-##' @title Index.NA
+#' get contains NA's row, col
+#' @description Index.NA function is borrow from package sva
+#' @title Index.NA
 Index.NA <- function(mat, by = c("row", "col")){
   by <- match.arg(by)
   if(by == "row"){
@@ -499,13 +499,13 @@ Index.NA <- function(mat, by = c("row", "col")){
   }
 }
 
-##' convert cluster list to Index with increased number
-##' @title List2Index
-##' @param cluster vector of probes clusters By distance(maxGap) constraints
-##' @param chr Chromosome vector
-##' @param pos position numeric vector
-##' @param names probe names vector ; used in function \link{clusterMaker}
-##' @return clusterIndex
+#' convert cluster list to Index with increased number
+#' @title List2Index
+#' @param cluster vector of probes clusters By distance(maxGap) constraints
+#' @param chr Chromosome vector
+#' @param pos position numeric vector
+#' @param names probe names vector ; used in function \link{clusterMaker}
+#' @return clusterIndex
 List2Index <- function(cluster, chr, pos, names){
   ## prepare IRange
   genome     <- GRanges(seqnames = chr, ranges = IRanges::IRanges(start = pos, width = 1), names = names)

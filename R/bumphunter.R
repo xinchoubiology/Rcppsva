@@ -1,6 +1,6 @@
-##' @title print
-##' @rdname print-methods
-##' @exportMethod print
+#' @title print
+#' @rdname print-methods
+#' @exportMethod print
 setMethod("print", signature(x = "bumps"),
           function(x, ...){
             cat(sprintf("'bumps' object with %d DMR bumps\n", nrow(x@bumps$diff)))
@@ -12,50 +12,50 @@ setMethod("print", signature(x = "bumps"),
             }
           })
 
-##' bumphuntingEngine
-##' 
-##' @title bumphuntingEngine
-##' @description bump hunting algorithm for 450k methylation microarray
-##' @param dat.m 450k methylation microarray matrix via preprocessing; m x n matrix
-##' @param design design matrix; [1, covariate of interested, paired info]
-##' @param sv.m surrogate variables matrix 
-##' @param chr chromosome vector for probes
-##' @param pos position vector for probes
-##' @param cluster The clusters of locations that are to be analyzed together. via correlation
-##'        perspevtive, we can use agglomerate cluster index to bump analysis. If cluster is not
-##'        available, clusterMaker can be used to cluster nearby locations
-##' @param coef Integer. covariate of interest's column
-##' @param names probe names vector ; used in function \link{clusterMaker} and \link{regionSeeker}
-##' @param cutoff numeric value. Value of estimates coefficient of covariate of interested above cutoff
-##'        or below the negative of cutoff will be used as candidate bump regions. 
-##' @param pvalue numeric value. cutoff of pvalue for candidate regions selection
-##' @param maxGap if cluster is not availabel. maxGap is used by clusterMaker to define cluster
-##' @param minDist if clusters are build, the mininal distance between clusters is setted as constraint
-##' @param nullMethod Method for generating null candidate regions. If ncol(design) > 2. bootstrap method is recommanded
-##' @param robust logic, use robust linear regression or not; Default FALSE
-##' @param smooth logic. If TRUE then the standard error or correlation of point-wise estimatrs will be used as weigths 
-##'        in the \link{smoother}
-##' @param smoothMethod local regression method used in \link{smoother}
-##' @param B integer; Denoting the number of resamples to computr null distribution. Default = 0
-##'        B is used to generate permutation matrix, 
-##'        which describes permutations to generate null distribution
-##' @param corr logical; If TRUE then position correlation matrix is considered as weighted matrix
-##'        and clusters modified by correlation constraint; Default FALSE
-##' @param corFunc Optional; "spearman"(Default) and "pearson"
-##' @param combp logical; If TRUE then slk p correction will be applied
-##' @param merge how to merge two sub-clusters; c("single", "complete", "average")
-##' @param corr.cutoff correlation cutoff in merge algorithm
-##' @param combine combine pvalue method; c("stouffer_liptak", "zscore")
-##' @param comb.cutoff cutoff for combination pvalue method
-##' @param verbose logical. Optional printing progress message or not
-##' @param ...
-##' @return bumps object
-##' @importFrom limma lmFit eBayes 
-##' @examples 
-##' # cluster input format: cg12045430 cg20826792 cg00381604 cg20253340 
+#' bumphuntingEngine
+#' 
+#' @title bumphuntingEngine
+#' @description bump hunting algorithm for 450k methylation microarray
+#' @param dat.m 450k methylation microarray matrix via preprocessing; m x n matrix
+#' @param design design matrix; [1, covariate of interested, paired info]
+#' @param sv.m surrogate variables matrix 
+#' @param chr chromosome vector for probes
+#' @param pos position vector for probes
+#' @param cluster The clusters of locations that are to be analyzed together. via correlation
+#'        perspevtive, we can use agglomerate cluster index to bump analysis. If cluster is not
+#'        available, clusterMaker can be used to cluster nearby locations
+#' @param coef Integer. covariate of interest's column
+#' @param names probe names vector ; used in function \link{clusterMaker} and \link{regionSeeker}
+#' @param cutoff numeric value. Value of estimates coefficient of covariate of interested above cutoff
+#'        or below the negative of cutoff will be used as candidate bump regions. 
+#' @param pvalue numeric value. cutoff of pvalue for candidate regions selection
+#' @param maxGap if cluster is not availabel. maxGap is used by clusterMaker to define cluster
+#' @param minDist if clusters are build, the mininal distance between clusters is setted as constraint
+#' @param nullMethod Method for generating null candidate regions. If ncol(design) > 2. bootstrap method is recommanded
+#' @param robust logic, use robust linear regression or not; Default FALSE
+#' @param smooth logic. If TRUE then the standard error or correlation of point-wise estimatrs will be used as weigths 
+#'        in the \link{smoother}
+#' @param smoothMethod local regression method used in \link{smoother}
+#' @param B integer; Denoting the number of resamples to computr null distribution. Default = 0
+#'        B is used to generate permutation matrix, 
+#'        which describes permutations to generate null distribution
+#' @param corr logical; If TRUE then position correlation matrix is considered as weighted matrix
+#'        and clusters modified by correlation constraint; Default FALSE
+#' @param corFunc Optional; "spearman"(Default) and "pearson"
+#' @param combp logical; If TRUE then slk p correction will be applied
+#' @param merge how to merge two sub-clusters; c("single", "complete", "average")
+#' @param corr.cutoff correlation cutoff in merge algorithm
+#' @param combine combine pvalue method; c("stouffer_liptak", "zscore")
+#' @param comb.cutoff cutoff for combination pvalue method
+#' @param verbose logical. Optional printing progress message or not
+#' @param ...
+#' @return bumps object
+#' @importFrom limma lmFit eBayes 
+#' @examples 
+#' # cluster input format: cg12045430 cg20826792 cg00381604 cg20253340 
 ##  #                                3          3          3          4 
 ##  # -like vector
-##' @export
+#' @export
 bumphuntingEngine <- function(dat.m = NULL, design, sv.m = NULL, 
                               chr, pos, cluster = NULL, coef = 2,
                               names, cutoff = NULL, pvalue = 0.01, maxGap = 500, 

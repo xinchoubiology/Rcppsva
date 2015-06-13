@@ -1,21 +1,21 @@
-##' Adjust for batch effects using an empirical Bayesian or parameter frameworks
-##'
-##' ComBat allows users to adjust for batch effects in datasets where the batch covariate is known, using methodology
-##' described in Johnson et al. 2007. It uses either parametric or non-parametric empirical Bayes frameworks for adjusting data for
-##' batch effects.  Users are returned an expression matrix that has been corrected for batch effects. The input
-##' data are assumed to be cleaned and normalized before batch effect removal.[[Cpp Rewrite and we finally get 100x speedup]]
-##' (For 485512 x 6 expression array matrix = 9622.983 secs = 2 hrs 40 mins) and origin source code of pure R version is from minif package
-##'
-##' @param dat Genomic measure matrix (dimensions probe x sample) - for example, expression matrix
-##' @param batch {Batch covariate (only one batch allowed)}
-##' @param mod Model matrix for outcome of interest and other covariates besides batch
-##' @param par.prior (Optional) TRUE indicates parametric adjustments will be used, FALSE indicates non-parametric adjustments will be used
-##' @param prior.plots (Optional)TRUE give prior plots with black as a kernel estimate of the empirical batch effect density and red as the parametric
-##' @importFrom genefilter rowVars
-##' @return data :
-##'         A probe x sample genomic measure matrix, adjusted for batch effects.
-##' @export
-##' @author Xin Zhou \url{xinchoubiology@@gmail.com}
+#' Adjust for batch effects using an empirical Bayesian or parameter frameworks
+#'
+#' ComBat allows users to adjust for batch effects in datasets where the batch covariate is known, using methodology
+#' described in Johnson et al. 2007. It uses either parametric or non-parametric empirical Bayes frameworks for adjusting data for
+#' batch effects.  Users are returned an expression matrix that has been corrected for batch effects. The input
+#' data are assumed to be cleaned and normalized before batch effect removal.[[Cpp Rewrite and we finally get 100x speedup]]
+#' (For 485512 x 6 expression array matrix = 9622.983 secs = 2 hrs 40 mins) and origin source code of pure R version is from minif package
+#'
+#' @param dat Genomic measure matrix (dimensions probe x sample) - for example, expression matrix
+#' @param batch {Batch covariate (only one batch allowed)}
+#' @param mod Model matrix for outcome of interest and other covariates besides batch
+#' @param par.prior (Optional) TRUE indicates parametric adjustments will be used, FALSE indicates non-parametric adjustments will be used
+#' @param prior.plots (Optional)TRUE give prior plots with black as a kernel estimate of the empirical batch effect density and red as the parametric
+#' @importFrom genefilter rowVars
+#' @return data :
+#'         A probe x sample genomic measure matrix, adjusted for batch effects.
+#' @export
+#' @author Xin Zhou \url{xinchoubiology@@gmail.com}
 
 ComBat <- function(dat, batch, mod=NULL, par.prior=TRUE,prior.plots=FALSE) {
   # make batch a factor and make a set of indicators for batch
