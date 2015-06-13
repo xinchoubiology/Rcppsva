@@ -1,15 +1,23 @@
-#' @title print
-#' @rdname print-methods
-#' @exportMethod print
-setMethod("print", signature(x = "bumps"),
-          function(x, ...){
-            cat(sprintf("'bumps' object with %d DMR bumps\n", nrow(x@bumps$diff)))
+#' @title show
+#' @rdname show-methods
+#' @exportMethod show
+setMethod("show", signature(object = "bumps"),
+          function(object){
+            cat(sprintf("'bumps' object with %d DMR bumps\n", nrow(object@bumps$diff)))
             cat(sprintf("'bumps' object with %d NULL H bumps for discriminative analysis\n", 
-                        nrow(x@bumps$null)))
+                        nrow(object@bumps$null)))
             cat(sprintf("algorithms : ...... \n"))
-            for(params in names(x@algorithm)){
-              cat(sprintf("\t%s = %s \n", params, x@algorithm[[params]]))
+            for(params in names(object@algorithm)){
+              cat(sprintf("\t%s = %s \n", params, object@algorithm[[params]]))
             }
+          })
+
+#' @title get.bumps
+#' @rdname get.bumps-methods
+#' @exportMethod get.bumps
+setMethod("get.bumps", signature(object = "bumps"),
+          function(object, ...){
+            return(object@bumps)
           })
 
 #' bumphuntingEngine
