@@ -36,7 +36,8 @@ setMethod("get.bumps", signature(object = "bumps"),
 #' @param names probe names vector ; used in function \link{clusterMaker} and \link{regionSeeker}
 #' @param cutoff numeric value. Value of estimates coefficient of covariate of interested above cutoff
 #'        or below the negative of cutoff will be used as candidate bump regions. 
-#' @param pvalue numeric value. cutoff of pvalue for candidate regions selection
+#' @param qvalue numeric value. cutoff of pvalue for candidate regions selection || 
+#'                              qvalue cutoff for combination pvalue method
 #' @param maxGap if cluster is not availabel. maxGap is used by clusterMaker to define cluster
 #' @param minDist if clusters are build, the mininal distance between clusters is setted as constraint
 #' @param nullMethod Method for generating null candidate regions. If ncol(design) > 2. bootstrap method is recommanded
@@ -54,7 +55,6 @@ setMethod("get.bumps", signature(object = "bumps"),
 #' @param merge how to merge two sub-clusters; c("single", "complete", "average")
 #' @param corr.cutoff correlation cutoff in merge algorithm
 #' @param combine combine pvalue method; c("stouffer_liptak", "zscore")
-#' @param comb.cutoff cutoff for combination pvalue method
 #' @param verbose logical. Optional printing progress message or not
 #' @param ...
 #' @return bumps object
@@ -66,13 +66,13 @@ setMethod("get.bumps", signature(object = "bumps"),
 #' @export
 bumphuntingEngine <- function(dat.m = NULL, design, sv.m = NULL, 
                               chr, pos, cluster = NULL, coef = 2,
-                              names, cutoff = NULL, pvalue = 0.01, maxGap = 500, 
+                              names, cutoff = NULL, qvalue = 0.1, maxGap = 500, 
                               minDist = 500, robust = FALSE, smooth = FALSE, 
                               smoothMethod = c("weightedLowess", "loess", "locfit"),
                               nullMethod = c("permutation", "bootstrap"), B = 10000, corr = FALSE, 
                               corFunc = c("spearman", "pearson", "kendall"), combp = FALSE,
                               merge = c("single", "complete", "average"), corr.cutoff = 0.8,
-                              combine = c("stouffer_liptak", "zscore"), comb.cutoff = 0.1,
+                              combine = c("stouffer_liptak", "zscore"),
                               verbose = TRUE, ...){
   
   nullMethod <- match.arg(nullMethod)
@@ -165,21 +165,21 @@ bumphuntingEngine <- function(dat.m = NULL, design, sv.m = NULL,
     if(verbose){
       cat(sprintf("[Bumphunting]\t Finding DMRs... \n"))
     }
-    region <- regionSeeker(beta = beta, chr = chr, pos = pos, names = names, cluster = cluster, maxGap = maxGap, drop = TRUE, permbeta = beta0)
+    region <- regionSeeker(beta = beta, chr = chr, pos = pos, names = names, cluster = cluster, maxGap = maxGap, drop = TRUE, permbeta = beta0, corr = corr, qvalue = qvalue)
   } else if(combp){
     if(verbose){
       cat(sprintf("[Bumphunting]\t Finding DMRs by Comb-p method... \n"))
     }
     ## TODO fixed weight argument error
     weight <- NULL
-    region <- combine.pvalue(dat.m = dat.m, pvalues = p, cluster = cluster, chr = chr, pos = pos, names = names, method = method, combine = combine, weight = weight, cutoff = comb.cutoff)
+    region <- combine.pvalue(dat.m = dat.m, pvalues = p, cluster = cluster, chr = chr, pos = pos, names = names, method = method, combine = combine, weight = weight, cutoff = qvalue)
   }
   
   algorithm <- list(method = if(combp) combine else nullMethod, 
                     smooth = if(smooth) "smoothMethod" else "NULL",
                     correlation = if(corr) corFunc else "NULL",
                     corrcutoff = if(corr) corr.cutoff else "NULL",
-                    bumpcitoff = comb.cutoff, cluster = merge)
+                    bumpcitoff = comb.cutoff, cluster = merge, qvalue = qvalue)
   
   new("bumps", algorithm = algorithm, bumps = region)
 }

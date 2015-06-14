@@ -398,6 +398,24 @@ segmentsMaker <- function(cluster, beta, cutoff, chr, pos, permbeta){
   segments
 }
 
+#' segmentsCluster clustering correlated probes
+#' 
+#' @title segmentsCluster
+#' @param cluster vector of probes clusters
+#' @param beta beta value for probes
+#' @param chr chromosome vector
+#' @param pos position vector
+#' @param permbeta null hypothesis distribution
+#' @return data.table of all clusters
+#' @export
+segmentsCluster <- function(cluster, beta, chr, pos, permbeta){
+  cnames <- names(cluster)
+  perm   <- permbeta[cnames, ]
+  segments <- data.table(names = cnames, cluster = cluster, beta = beta[cnames,], chr = chr, pos = pos, perm)
+  segments <- plyr:::splitter_d(segments, .(cluster))
+  segments
+}
+
 #' bump hunting algorithm one clusters predefined by distance/correlation constraints
 #' 
 #' @title regionSeeker
@@ -413,7 +431,10 @@ segmentsMaker <- function(cluster, beta, cutoff, chr, pos, permbeta){
 #' @param permbeta Null hypothesis beta distribution 
 #'        [added permbeta(H0 distribution) to the end columns of region table from \link{regionSeeker}]
 #' @param drop FALSE; create discriminate table (significant | null) or not
+#' @param corr logical, whether the cluster is generated under distance constraint or 
+#'        under correlation constraint. Default FALSE
 #' @param mcores multiple threads used in \link{regionSeeker}
+#' @param qvalue cutoff of FDR(false discovery rate)
 #' @param verbose FALSE
 #' @details If an arbitary threshold is defined, regionSeeker will return a table (within / without)
 #'          the threshold. In bump hunting algorithms, these contiguous probes mean bumps.
@@ -423,7 +444,7 @@ segmentsMaker <- function(cluster, beta, cutoff, chr, pos, permbeta){
 #' @export
 regionSeeker <- function(beta, chr, pos, cluster = NULL, maxGap = 500, names, 
                          cutoff = c(quantile(abs(beta), 0.9), quantile(abs(beta), 0.1)),
-                         permbeta = NULL, mcores = 2,
+                         permbeta = NULL, mcores = 2, corr = FALSE, qvalue = 0.1,
                          drop = FALSE, verbose = FALSE){
   if(is.null(cluster)){
     cluster <- clusterMaker(chr = chr, pos = pos, maxGap = maxGap, names = names)
@@ -438,42 +459,68 @@ regionSeeker <- function(beta, chr, pos, cluster = NULL, maxGap = 500, names,
   genome     <- GRanges(seqnames = chr, ranges = IRanges::IRanges(start = pos, width = 1), names = names, chr = chr)
   seqlevels(genome) <- sort(seqlevels(genome))
   genome     <- sort(genome)
+  L          <- ncol(permbeta)
   
-  segments <- segmentsMaker(cluster = cluster, beta = beta, 
-                            cutoff = c(-cutoff[1], -cutoff[2], cutoff[2], cutoff[1]),
-                            chr = genome$chr,
-                            pos = start(genome), 
-                            permbeta = permbeta)
+  if(corr){
+    segments <- segmentsCluster(cluster = cluster, beta = beta,
+                                chr = genome$chr,
+                                pos = start(genome),
+                                permbeta = permbeta)
     
-  res <- vector("list", 3)
-  
-  if(verbose)
-    cat("[regionSeeker]\t Estimating Statistics For Regions Hyper, Hypo, NULL ...")
-  
-  L <- ncol(permbeta)
-  for(i in 1:3){
-    out <- llply(segments[[i]], function(ix){
-                                  data.table(chr     = ix[1,6], 
-                                             start   = min(ix[,7]), 
-                                             end     = max(ix[,7]) + 1, 
-                                             length  = max(ix[,7]) - min(ix[,7]) + 1,
+    out      <- llply(segments, function(ix){
+                                  data.table(chr     = ix[1,4],
+                                             start   = min(ix[,5]), 
+                                             end     = max(ix[,5]) + 1,
+                                             length  = max(ix[,5]) - min(ix[,5]) + 1,
                                              value   = mean(ix[,3]), 
                                              area    = abs(sum(ix[,3])), 
                                              cluster = ix[1,2], 
-                                             L = nrow(ix), 
+                                             L = nrow(ix),
                                              cgnames = paste0(ix[,1],collapse = ";"),
-                                             pvalue  = min(sum(mean(ix[,3]) >= colMeans(ix[,-(1:7)])), sum(mean(ix[,3]) <= colMeans(ix[,-(1:7)]))) / L,
-                                             parea   = sum(abs(sum(ix[,3])) <= abs(colSums(ix[,-(1:7)])))/ L,
-                                             status  = names(segments)[i])
+                                             pvalue  = min(sum(mean(ix[,3]) >= colMeans(ix[,-(1:5)])), sum(mean(ix[,3]) <= colMeans(ix[,-(1:5)]))) / L,
+                                             parea   = sum(abs(sum(ix[,3])) <= abs(colSums(ix[,-(1:5)])))/ L)
                                 }, .parallel = TRUE)
     
-    res[[i]] <- do.call(rbind, out)
+    res  <- do.call(rbind, out)
+    qval <- p.adjust(res$parea, method = "fdr")
+    res$qvalue <- qval
+    
+    return(list(diff = res[which(qval) <= qvalue,], null = res[which(qval) > qvalue,]))
+  }else{
+    segments <- segmentsMaker(cluster = cluster, beta = beta,
+                              cutoff = c(-cutoff[1], -cutoff[2], cutoff[2], cutoff[1]),
+                              chr = genome$chr,
+                              pos = start(genome), 
+                              permbeta = permbeta)
+    res <- vector("list", 3)
+    
+    if(verbose)
+      cat("[regionSeeker]\t Estimating Statistics For Regions Hyper, Hypo, NULL ...")
+    
+    for(i in 1:3){
+      out <- llply(segments[[i]], function(ix){
+                                    data.table(chr     = ix[1,6], 
+                                               start   = min(ix[,7]), 
+                                               end     = max(ix[,7]) + 1, 
+                                               length  = max(ix[,7]) - min(ix[,7]) + 1,
+                                               value   = mean(ix[,3]), 
+                                               area    = abs(sum(ix[,3])), 
+                                               cluster = ix[1,2], 
+                                               L = nrow(ix), 
+                                               cgnames = paste0(ix[,1],collapse = ";"),
+                                               pvalue  = min(sum(mean(ix[,3]) >= colMeans(ix[,-(1:7)])), sum(mean(ix[,3]) <= colMeans(ix[,-(1:7)]))) / L,
+                                               parea   = sum(abs(sum(ix[,3])) <= abs(colSums(ix[,-(1:7)])))/ L,
+                                               status  = names(segments)[i])
+                                  }, .parallel = TRUE)
+      res[[i]] <- do.call(rbind, out)
+    }
+    
+    names(res) <- names(segments)
+    if(drop){
+      res <- list(diff = rbind(res$hyper, res$hypo), null = res$null)
+    }
+    return(res)
   }
-  names(res) <- names(segments)
-  if(drop){
-    res <- list(diff = rbind(res$hyper, res$hypo), null = res$null)
-  }
-  return(res)
 }
 
 #' fitting L/S model with missing values

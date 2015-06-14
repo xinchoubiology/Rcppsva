@@ -5,14 +5,13 @@
 \title{bumphuntingEngine}
 \usage{
 bumphuntingEngine(dat.m = NULL, design, sv.m = NULL, chr, pos,
-  cluster = NULL, coef = 2, names, cutoff = NULL, pvalue = 0.01,
+  cluster = NULL, coef = 2, names, cutoff = NULL, qvalue = 0.1,
   maxGap = 500, minDist = 500, robust = FALSE, smooth = FALSE,
   smoothMethod = c("weightedLowess", "loess", "locfit"),
   nullMethod = c("permutation", "bootstrap"), B = 10000, corr = FALSE,
   corFunc = c("spearman", "pearson", "kendall"), combp = FALSE,
   merge = c("single", "complete", "average"), corr.cutoff = 0.8,
-  combine = c("stouffer_liptak", "zscore"), comb.cutoff = 0.1,
-  verbose = TRUE, ...)
+  combine = c("stouffer_liptak", "zscore"), verbose = TRUE, ...)
 }
 \arguments{
 \item{dat.m}{450k methylation microarray matrix via preprocessing; m x n matrix}
@@ -36,7 +35,8 @@ available, clusterMaker can be used to cluster nearby locations}
 \item{cutoff}{numeric value. Value of estimates coefficient of covariate of interested above cutoff
 or below the negative of cutoff will be used as candidate bump regions.}
 
-\item{pvalue}{numeric value. cutoff of pvalue for candidate regions selection}
+\item{qvalue}{numeric value. cutoff of pvalue for candidate regions selection ||
+qvalue cutoff for combination pvalue method}
 
 \item{maxGap}{if cluster is not availabel. maxGap is used by clusterMaker to define cluster}
 
@@ -67,8 +67,6 @@ and clusters modified by correlation constraint; Default FALSE}
 \item{corr.cutoff}{correlation cutoff in merge algorithm}
 
 \item{combine}{combine pvalue method; c("stouffer_liptak", "zscore")}
-
-\item{comb.cutoff}{cutoff for combination pvalue method}
 
 \item{verbose}{logical. Optional printing progress message or not}
 

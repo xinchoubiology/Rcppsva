@@ -20,3 +20,5 @@ Rcpp Integration Surrogate Variable Analysis and Rewrite by RcppEigen and RcppGS
 + Combine-pvalue algorithm for DMR search added
 
 + @Jun, 11. Pass weight argument to \link{combp} function should be fixed
+
++ @Jun, 14. correct the `correlateClusterMaker` and `Segments` overlap problem, actually, we should decovolute the `correlateClusterMaker` and `Segments`.

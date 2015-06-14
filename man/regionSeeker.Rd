@@ -6,7 +6,8 @@
 \usage{
 regionSeeker(beta, chr, pos, cluster = NULL, maxGap = 500, names,
   cutoff = c(quantile(abs(beta), 0.9), quantile(abs(beta), 0.1)),
-  permbeta = NULL, mcores = 2, drop = FALSE, verbose = FALSE)
+  permbeta = NULL, mcores = 2, corr = FALSE, qvalue = 0.1,
+  drop = FALSE, verbose = FALSE)
 }
 \arguments{
 \item{beta}{vector of different probes}
@@ -29,6 +30,11 @@ are returned as predicted region c(sig-cutoff, null-cutoff)}
 [added permbeta(H0 distribution) to the end columns of region table from \link{regionSeeker}]}
 
 \item{mcores}{multiple threads used in \link{regionSeeker}}
+
+\item{corr}{logical, whether the cluster is generated under distance constraint or
+under correlation constraint. Default FALSE}
+
+\item{qvalue}{cutoff of FDR(false discovery rate)}
 
 \item{drop}{FALSE; create discriminate table (significant | null) or not}
 
