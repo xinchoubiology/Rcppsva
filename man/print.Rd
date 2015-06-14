@@ -5,7 +5,7 @@
 \title{out.R is used to print/plot data object in Rcppsva to validation
 output 450k microarray data frame with ordered positions to BED file}
 \usage{
-\method{print}{bed}(x, bed = NULL,
+\method{print}{BED}(x, bed = NULL,
   db = IlluminaHumanMethylation450kanno.ilmn12.hg19, ...)
 }
 \arguments{

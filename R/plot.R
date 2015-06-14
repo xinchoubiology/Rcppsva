@@ -6,7 +6,7 @@
 #' @param ... bed BED file name
 #'            db  Database of probes
 #' @return BED data.frame
-#' @method print bed
+#' @method print BED
 #' @examples 
 #' require(IlluminaHumanMethylation450kanno.ilmn12.hg19)
 #' data(IlluminaHumanMethylation450kanno.ilmn12.hg19)
