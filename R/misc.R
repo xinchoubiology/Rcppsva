@@ -485,7 +485,7 @@ regionSeeker <- function(beta, chr, pos, cluster = NULL, maxGap = 500, names,
     qval <- p.adjust(res$parea, method = "fdr")
     res$qvalue <- qval
     
-    return(list(diff = res[which(qval) <= qvalue,], null = res[which(qval) > qvalue,]))
+    return(list(diff = res[which(qval <= qvalue),], null = res[which(qval > qvalue),]))
   }else{
     segments <- segmentsMaker(cluster = cluster, beta = beta,
                               cutoff = c(-cutoff[1], -cutoff[2], cutoff[2], cutoff[1]),
