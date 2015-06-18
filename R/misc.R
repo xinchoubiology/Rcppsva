@@ -422,6 +422,7 @@ segmentsCluster <- function(cluster, beta, chr, pos, permbeta){
 #' @param beta vector of different probes
 #' @param chr Chromosome vector
 #' @param pos position numeric vector
+#' @param pvalc pvalue cutoff for bump selection; Default 0.1
 #' @param cluster list clusters defined by arguments or \link{clusterMaker}
 #' @param maxGap max gap length between 2 probes within a region ; 
 #'        used in function \link{clusterMaker}
@@ -442,8 +443,8 @@ segmentsCluster <- function(cluster, beta, chr, pos, permbeta){
 #' @import data.table
 #' @return Table of predict regions
 #' @export
-regionSeeker <- function(beta, chr, pos, cluster = NULL, maxGap = 500, names, 
-                         cutoff = c(quantile(abs(beta), 0.9), quantile(abs(beta), 0.1)),
+regionSeeker <- function(beta, chr, pos, cluster = NULL, maxGap = 500, names, pvalc = 0.1,
+                         cutoff = c(quantile(abs(beta), 1-pvalc), quantile(abs(beta), pvalc)),
                          permbeta = NULL, mcores = 2, corr = FALSE, qvalue = 0.1,
                          drop = FALSE, verbose = FALSE){
   if(is.null(cluster)){
@@ -485,7 +486,9 @@ regionSeeker <- function(beta, chr, pos, cluster = NULL, maxGap = 500, names,
     qval <- p.adjust(res$parea, method = "fdr")
     res$qvalue <- qval
     
-    return(list(diff = res[which(qval <= qvalue),], null = res[which(qval > qvalue),]))
+    diff <- res[(res$value <= -cutoff[1] || res$value >= cutoff[1]),]
+    null <- res[(res$value >= -cutoff[2] && res$value <= cutoff[2]),]
+    return(list(diff = diff[diff$qvalue <= qvalue,], null = null[null$qvalue > qvalue,]))
   }else{
     segments <- segmentsMaker(cluster = cluster, beta = beta,
                               cutoff = c(-cutoff[1], -cutoff[2], cutoff[2], cutoff[1]),
