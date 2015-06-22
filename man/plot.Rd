@@ -2,9 +2,12 @@
 % Please edit documentation in R/plot-methods.R
 \name{plot.corr}
 \alias{plot.corr}
+\alias{plot.dendro}
 \title{plot correlation matrix by ggplot}
 \usage{
 \method{plot}{corr}(x, y = NULL, cutoff = 0.8, ...)
+
+\method{plot}{dendro}(x, ..., rotate = FALSE, labels = TRUE)
 }
 \arguments{
 \item{x}{n x n correlation matrix}
@@ -12,12 +15,22 @@
 \item{y}{NULL}
 
 \item{cutoff}{correlation cutoff; Default = 0.8}
+
+\item{...}{ignored argument}
+
+\item{rotate}{if TRUE, rotate tree by 90 degree; Default FALSE}
+
+\item{labels}{if TRUE, show segment labels}
+
+\item{x}{dendro class object}
 }
 \value{
 ggplot object
 }
 \description{
 plot correlation matrix by ggplot
+
+plot hierachical tree for clustering data by ggplot
 }
 \examples{
 corrmat <- list(cor = matrix(c(-0.9,-0.6,0.3,1), nrow = 2))
