@@ -5,9 +5,9 @@
 \title{regionSeeker}
 \usage{
 regionSeeker(beta, chr, pos, cluster = NULL, maxGap = 500, names,
-  cutoff = c(quantile(abs(beta), 0.9), quantile(abs(beta), 0.1)),
-  permbeta = NULL, mcores = 2, corr = FALSE, qvalue = 0.1,
-  drop = FALSE, verbose = FALSE)
+  pvalc = 0.1, cutoff = c(quantile(abs(beta), 1 - pvalc),
+  quantile(abs(beta), pvalc)), permbeta = NULL, mcores = 2, corr = FALSE,
+  qvalue = 0.1, drop = FALSE, verbose = FALSE)
 }
 \arguments{
 \item{beta}{vector of different probes}
@@ -22,6 +22,8 @@ regionSeeker(beta, chr, pos, cluster = NULL, maxGap = 500, names,
 used in function \link{clusterMaker}}
 
 \item{names}{probe names vector ; used in function \link{clusterMaker}}
+
+\item{pvalc}{pvalue cutoff for bump selection; Default 0.1}
 
 \item{cutoff}{cutoff threshold for bump selection. only segements within cluster satisfy cutoff
 are returned as predicted region c(sig-cutoff, null-cutoff)}
