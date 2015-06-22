@@ -10,7 +10,7 @@ dendro.data(model, ...)
 
 \method{dendro.data}{default}(model, ...)
 
-\method{dendro.data}{hclust}(model, ...)
+\method{dendro.data}{hclust}(model, type = c("rectangle", "triangle"), ...)
 }
 \arguments{
 \item{model}{object of \code{\link{stats}{hclust}}}

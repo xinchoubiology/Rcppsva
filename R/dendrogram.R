@@ -30,9 +30,11 @@ dendro.data.default <- function(model, ...){
 #' @return ggplot of clustering hierachical tree
 #' @method dendro.data hclust
 #' @export
-## TODO data transformation and ggplot dendro_dat
-dendro.data.hclust <- function(model, ...){
-  dendro_dat <- as.dendrogram(model)
+dendro.data.hclust <- function(model, type = c("rectangle", "triangle"), ...){
+  type <- match.arg(type)
+  dendro <- as.dendrogram(model)
+  res <- dendrogram(dendro, type = type)
+  return(res)
 }
 
 
