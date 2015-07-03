@@ -11,23 +11,6 @@
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::depends(RcppEigen)]]
 
-enum corr_TYPE {
-  pearson,
-  spearman,
-  kendall
-};
-
-corr_TYPE parse_corr(std::string const& method){
-  if (method == "kendall"){
-    return kendall;
-  }
-  else if(method == "spearman"){
-    return spearman;
-  }
-  else{
-    return pearson;
-  }
-}
 
 //' Integrating empirical bayesian prior function
 //' by Monte Carlo integration
