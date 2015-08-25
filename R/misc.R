@@ -574,3 +574,61 @@ List2Index <- function(cluster, chr, pos, names){
   
   cluster
 }
+
+#' get pre-clustering matrix, here we follow SOM's definition of best matched unit based on
+#' genome sequence constraint (Prototype Generation) 
+#' In pre-processing steps, we have generate the pre-clustered CpG sites by their spatial constraint,
+#' therefore, the original data matrix should be modified for future processing
+#' @title protoGen
+#' @description considering that clusters are determined by different correlation definition
+#'              pearson correlation  : defined by mean
+#'              spearman correlation : defined by median of rank
+#' @param dat.m data matrix of methylation data
+#' @param prototype Index list of each pre-clustered CpG sites unit
+#' @param method Optional; pearson(Default) and spearman
+#' @param mcores multiple threads used
+#' @return bmu matrix of clustered center for each pre-defined cluster
+#' @importFrom stringr str_split
+#' @export
+#' @author Xin Zhou \url{xxz220@@miami.edu}
+protoGen <- function(dat.m = NULL, prototype = NULL, method = c("pearson", "spearman"),
+                     mcores = 4){
+  options(warn = -1)
+  if(is.null(dat.m) || is.null(prototype)){
+    stop("methylation expression matrix & pre-clustered prototype are needed ...")
+  }
+  method <- match.arg(method)
+  if(mcores >= 2){
+    registerDoMC(cores = mcores)
+  }
+  
+  if(method == "pearson") {
+    bmu <- do.call(rbind, llply(prototype[[5]], function(ix){
+                                              cgIdx <- str_split(ix, pattern = ";")[[1]]
+                                              if(length(cgIdx) >= 2) {
+                                                unit  <- colMeans(dat.m[cgIdx,])
+                                              } else {
+                                                unit  <- dat.m[cgIdx, ,drop = FALSE]
+                                              }
+                                              unit
+                                           }, .parallel = TRUE))
+  }else {
+    bmu <- do.call(rbind, llply(prototype[[5]], function(ix){
+                                              cgIdx  <- str_split(ix, pattern = ";")[[1]]
+                                              protor <- aaply(dat.m[cgIdx, ,drop=FALSE], 1, 
+                                                              function(ix){
+                                                                rank(ix)
+                                                              })
+                                              if(length(cgIdx) >= 2) {
+                                                unit   <- aaply(protor, 2, function(ix){
+                                                                             median(ix)
+                                                                           })
+                                              } else {
+                                                unit   <- protor
+                                              }
+                                              unit
+                                           }, .parallel = TRUE))
+  }
+  rownames(bmu) <- 1 : dim(bmu)[1]
+  bmu
+}
