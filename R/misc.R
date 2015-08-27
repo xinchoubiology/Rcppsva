@@ -612,7 +612,7 @@ protoGen <- function(dat.m = NULL, prototype = NULL, method = c("pearson", "spea
                                               }
                                               unit
                                            }, .parallel = TRUE))
-  }else {
+  } else {
     bmu <- do.call(rbind, llply(prototype[[5]], function(ix){
                                               cgIdx  <- str_split(ix, pattern = ";")[[1]]
                                               protor <- aaply(dat.m[cgIdx, ,drop=FALSE], 1, 
