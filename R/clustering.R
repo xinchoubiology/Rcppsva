@@ -82,5 +82,67 @@ Eigenbeta <- function(mset = NULL, cluster = NULL, nPC = 1, verbose = TRUE,
 }
 
 #' based on WGCNA and Dynamic Tree Cut, clustering the DMRs
-#' Dynamic Tree cut
+#' Dynamic Tree cut method to determine co-methylation modules of different regions
+#' @title moduleSearch
+#' @description cutreeDynamic is a dynamic clustering method borrowed from package dynamicTreeCut,
+#'              and in this method, we will clustered our pre-clustered beta matrix and calculate
+#'              out their co-regulation methylation regions
+#' @param beta.expr pre-clustered genome region for co-regulation methylation status
+#' @param cor.type  correlation type for dissimilarity calculation; "pearson"(Default) and "spearman"
+#' @param sim.type  similarity type for hierachical clustering; "signed"(Default) and "unsigned"
+#' @param method    hierachical clustering method; c("average", "ward", "single", "complete")
+#' @param deepSplit [0,1,2,3,4]. Parameter in cutreeDynamic to control the sensitivity of module detection
+#' @param cutHeight h_{max} in DynamicTreeCut method
+#' @param minClusterSize c_{min} minimum size of each cluster
+#' @param pamStage  Only used for method "hybrid" dynamicTreecut; If TRUE, the (PAM-like)stage will be
+#'                  performed
+#' @param pamRespectsDendro Logical
+#' @param usebigmemory use bigmemory or not 
+#' @return A list with following component:
+#'         clusters  a vector of cluster labels for all CpG regions
+#'         dendrogram dendrogram of Rclusterpp.hclust
+#' @export
+#' @importFrom Rclusterpp Rclusterpp.hclust
+#' @importFrom dynamicTreeCut cutreeDynamic
+#' @author Xin Zhou \url{xxz220@@miami.edu}
+moduleSearch <- function(beta.expr = NULL, cor.type = c("pearson", "spearman"),
+                         sim.type = c("signed", "unsigned"),
+                         method   = c("average", "ward", "single", "complete"),
+                         deepSplit = 1, cutHeight = 0.9, 
+                         minClusterSize = min(10, ncol(beta.expr)/2), 
+                         pamStage = TRUE, pamRespectsDendro = TRUE, 
+                         verbose = 2, ...){
+  options(warn = -1)
+  if(is.null(beta.expr)){
+    stop("methylation beta value matrix is needed by moduleSearch function ...")
+  }
+  cor.type <- match.arg(cor.type)
+  sim.type <- match.arg(sim.type)
+  method   <- match.arg(method)
+  
+  # calculating correlation between each CpG regions
+  beta.cor <- as.dist(cor(t(beta.expr), method = cor.type))
+  if(sim.type == "signed"){
+    beta.dissim <- (1 - beta.cor) / 2
+  } else{
+    beta.dissim <- abs(beta.cor)
+  }
+  
+  # clustering by Rclusterpp.hclust
+  dendro <- Rclusterpp.hclust(beta.dissim, method = method)
+  
+  clusters <- cutreeDynamic(dendro = dendro,
+                            deepSplit = deepSplit, cutHeight = cutHeight,
+                            minClusterSize = minClusterSize,
+                            method = "hybrid", distM = as.matrix(beta.dissim),
+                            pamStage = pamStage, pamRespectsDendro = pamRespectsDendro,
+                            verbose = verbose - 2)
+  if(verbose > 0){
+    WGCNA::plotDendroAndColors(dendro, labels2colors(clusters), dendroLabels = FALSE,
+                               main = "Methylation Clusters",
+                               rowText = clusters, textPositions = 1, rowTextAlignment = "center")
+  }
+  
+  list(clusters = clusters, dendrogram = dendro)
+}
 
