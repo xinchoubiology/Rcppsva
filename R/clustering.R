@@ -81,4 +81,6 @@ Eigenbeta <- function(mset = NULL, cluster = NULL, nPC = 1, verbose = TRUE,
   list(eigenBeta = eigenBeta, averageBeta = averageBeta)
 }
 
+#' based on WGCNA and Dynamic Tree Cut, clustering the DMRs
+#' Dynamic Tree cut
 
