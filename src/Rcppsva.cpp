@@ -1,8 +1,12 @@
-#include <RcppArmadillo.h>
+#include <RcppsvaHClust.h>
 #include <RcppEigen.h>
 #include <math.h>
 #include <vector>
 #include <string>
+#include <algorithm>
+#include <functional>
+#include <stack>
+#include <stdexcept>
 #include <omp.h>
 
 #define OMP_NUM_THREADS omp_get_max_threads()
@@ -254,4 +258,86 @@ Rcpp::NumericVector clique_merge(arma::mat M){
   }
   
   return res;
+}
+
+//' Defined linkage kinds in hierachical cluster
+//' @title linkage_kinds
+//' @return linkage_type character vector for linkage definition
+//' @export
+//  [[Rcpp::export]]
+Rcpp::CharacterVector linkage_kinds(){
+  // This ordering matches the 'case' statement above in the 'as' function 
+  Rcpp::CharacterVector lk(4);
+  lk[0] = "ward";
+  lk[1] = "average";
+  lk[2] = "single";
+  lk[3] = "complete";
+  
+  return lk;
+}
+
+//' Defined distance kinds for beta value matrix calculation
+//' @title distance_kinds
+//' @return distance_type character vector for distance definition
+//' @export
+//  [[Rcpp::export]]
+Rcpp::CharacterVector distance_kinds(){
+  // This ordering matches the 'case' statement above in the 'as' function 
+  Rcpp::CharacterVector lk(6);
+  lk[0] = "euclidean";
+  lk[1] = "manhattan";
+  lk[2] = "maximum";
+  lk[3] = "minkowski";
+  lk[4] = "signed.pearson";
+  lk[5] = "unsigned.pearson";
+  return lk;
+}
+
+namespace Rcpp{
+  template<> RcppsvaHClust::ByKinds as(SEXP x){
+    switch (as<int>(x)) {
+    default: throw not_compatible("Matrix rank direction invalid or not yet supported");
+    case 1: return RcppsvaHClust::ROW;
+    case 2: return RcppsvaHClust::COL;
+    }
+  }
+} // Rcpp
+
+
+//' Give an order of Matrix by row | column
+//' Question : how to deal with the vector contain multiple tie values
+//' @title matrix_rank
+//' @param M matrix for calculation rank
+//' @param by  row(1, default); col(2)
+//' @return ranked_matrix matrix represented by each (row/col) order
+//' @export
+//  [[Rcpp::export]]
+arma::mat matrix_rank(const arma::mat& M, SEXP by){
+  arma::mat ranks = arma::zeros(M.n_rows, M.n_cols);
+  
+  RcppsvaHClust::ByKinds byl = Rcpp::as<RcppsvaHClust::ByKinds>(by);
+  switch (byl) {
+  default:
+    throw std::invalid_argument("only by row(by = 1) and by col(by = 2) can be used in this function.");
+  case RcppsvaHClust::ROW: {
+    #pragma omp parallel for num_threads(OMP_NUM_THREADS)
+    for(int i = 0; i < M.n_rows; i++){
+      arma::uvec sorts = arma::sort_index(M.row(i));
+      for(int j = 0; j < M.n_cols; j++){
+        ranks(i, j) = sorts(j);
+      } 
+    }
+    return ranks;
+  }
+  case RcppsvaHClust::COL: {
+    #pragma omp parallel for num_threads(OMP_NUM_THREADS)
+    for(int i = 0; i < M.n_cols; i++){
+      arma::uvec sorts = arma::sort_index(M.col(i));
+      for(int j = 0; j < M.n_rows; j++){
+        ranks(j, i) = sorts(j);
+      } 
+    }
+    return ranks;
+  }
+  }
 }

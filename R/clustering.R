@@ -105,6 +105,9 @@ Eigenbeta <- function(mset = NULL, cluster = NULL, nPC = 1, verbose = TRUE,
 #' @importFrom Rclusterpp Rclusterpp.hclust
 #' @importFrom dynamicTreeCut cutreeDynamic
 #' @author Xin Zhou \url{xxz220@@miami.edu}
+#  Notice！This function has somthing wrong on memory management
+#  I'll introduce the Rclusterpp module in my package and finally
+#  I can directly transfer the beta value matrix in to hclust function
 moduleSearch <- function(beta.expr = NULL, cor.type = c("pearson", "spearman"),
                          sim.type = c("signed", "unsigned"),
                          method   = c("average", "ward", "single", "complete"),
@@ -117,32 +120,13 @@ moduleSearch <- function(beta.expr = NULL, cor.type = c("pearson", "spearman"),
     stop("methylation beta value matrix is needed by moduleSearch function ...")
   }
   cor.type <- match.arg(cor.type)
-  sim.type <- match.arg(sim.type)
+  sim.type <- match.arg(sim.type) == "signed"
   method   <- match.arg(method)
   
-  # calculating correlation between each CpG regions
-  beta.cor <- as.dist(cor(t(beta.expr), method = cor.type))
-  if(sim.type == "signed"){
-    beta.dissim <- (1 - beta.cor) / 2
-  } else{
-    beta.dissim <- abs(beta.cor)
-  }
   
   # clustering by Rclusterpp.hclust
-  dendro <- Rclusterpp.hclust(beta.dissim, method = method)
+  dendro <- HClust(beta.dissim, method = method, distance = cor.type, signed = sim.type)
   
-  clusters <- cutreeDynamic(dendro = dendro,
-                            deepSplit = deepSplit, cutHeight = cutHeight,
-                            minClusterSize = minClusterSize,
-                            method = "hybrid", distM = as.matrix(beta.dissim),
-                            pamStage = pamStage, pamRespectsDendro = pamRespectsDendro,
-                            verbose = verbose - 2)
-  if(verbose > 0){
-    WGCNA::plotDendroAndColors(dendro, labels2colors(clusters), dendroLabels = FALSE,
-                               main = "Methylation Clusters",
-                               rowText = clusters, textPositions = 1, rowTextAlignment = "center")
-  }
-  
-  list(clusters = clusters, dendrogram = dendro)
+  # TODO : find optimal clusters based on dendrogram
 }
 

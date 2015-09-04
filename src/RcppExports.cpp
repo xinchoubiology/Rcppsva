@@ -103,3 +103,35 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// linkage_kinds
+Rcpp::CharacterVector linkage_kinds();
+RcppExport SEXP Rcppsva_linkage_kinds() {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    __result = Rcpp::wrap(linkage_kinds());
+    return __result;
+END_RCPP
+}
+// distance_kinds
+Rcpp::CharacterVector distance_kinds();
+RcppExport SEXP Rcppsva_distance_kinds() {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    __result = Rcpp::wrap(distance_kinds());
+    return __result;
+END_RCPP
+}
+// matrix_rank
+arma::mat matrix_rank(const arma::mat& M, SEXP by);
+RcppExport SEXP Rcppsva_matrix_rank(SEXP MSEXP, SEXP bySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< const arma::mat& >::type M(MSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type by(bySEXP);
+    __result = Rcpp::wrap(matrix_rank(M, by));
+    return __result;
+END_RCPP
+}

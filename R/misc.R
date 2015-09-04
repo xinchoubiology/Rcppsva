@@ -574,3 +574,75 @@ List2Index <- function(cluster, chr, pos, names){
   
   cluster
 }
+
+#' execute hierachical clustering by beta value data directly
+#' @title hclust_from_data
+#' @param data beta value matrix
+#' @param link character for linkage type[default "ward" out of 
+#'        c("ward", "average", "complete", "single")]
+#' @param dist character for distance type[default "euclidean" out of 
+#'        c("euclidean", "manhanttan")]
+#' @param minkowski soft_power of minkowski distance
+#' @return hclust object for our cluster
+#' @export
+hclust_from_data <- function(data, link, dist, minkowski){
+  .Call('Rcppsva_hclust_from_data', 
+        data, 
+        as.integer(link), 
+        as.integer(dist),
+        as.numeric(minkowski), DUP = FALSE, NAOK = FALSE, PACKAGE = 'Rcppsva')
+}
+
+#' Hierachical Clustering function based on fast parallel hierachical clustering
+#' @title HClust
+#' @param data matrix of beta data
+#' @param method The agglomeration method to be used. This must be one of "ward", "single", "complete" or "average"
+#' @param distance The distance measure to be used. This must be one of "euclidiean", "manhattan", "maximum", or "minkowski".
+#' @param p power of the Minkowski distance.
+#' @param signed Logical; TRUE(default)
+#' @return An object of class *hclust* which describes the tree produced by the clustering process
+#' @export
+#' @author Xin Zhou \url{xxz220@@miami.edu}
+HClust <- function(data = NULL, method = "average", distance = "euclidean", p = 2, signed = TRUE){
+  options(warn = -1)
+  if(method == "ward" && distance != "euclidean"){
+    warning("Distance method is forced to (squared) 'euclidean' distance for Ward's method")
+    distance = "euclidean"
+  }
+  if(is.null(data)){
+    stop("Beta matrix is needed for Chclust")
+  }
+  if(distance == "spearman"){
+    data <- apply(data, 2, rank)
+    distance <- "pearson"
+  }
+  if(distance == "pearson"){
+    if(signed){
+      distance <- paste("signed", distance, sep = ".")
+    } else{
+      distance <- paste("unsigned", distance, sep = ".")
+    }
+  }
+  method <- pmatch(method, linkage_kinds())
+  if(is.na(method)){
+    stop("clustering method is not support by Rcppsva ...")
+  }
+  if(method == -1){
+    stop("ambigous clustering method ...")
+  }
+  distance <- pmatch(distance, distance_kinds())
+  if(is.na(distance)){
+    stop("distance metric is not support by Rcppsva ...")
+  }
+  if(distance == -1){
+    stop("ambigous distance metric ...")
+  }
+  
+  hcl <- hclust_from_data(as.matrix(data), link = method, dist = distance, minkowski = p)
+  hcl$labels      <- row.names(data)
+  hcl$methods     <- linkage_kinds()[method]
+  hcl$call        <- match.call()
+  hcl$dist.method <- distance_kinds()[distance]
+  class(hcl)      <- "hclust"
+  hcl
+}

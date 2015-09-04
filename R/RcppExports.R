@@ -90,3 +90,30 @@ clique_merge <- function(M) {
     .Call('Rcppsva_clique_merge', PACKAGE = 'Rcppsva', M)
 }
 
+#' Defined linkage kinds in hierachical cluster
+#' @title linkage_kinds
+#' @return linkage_type character vector for linkage definition
+#' @export
+linkage_kinds <- function() {
+    .Call('Rcppsva_linkage_kinds', PACKAGE = 'Rcppsva')
+}
+
+#' Defined distance kinds for beta value matrix calculation
+#' @title distance_kinds
+#' @return distance_type character vector for distance definition
+#' @export
+distance_kinds <- function() {
+    .Call('Rcppsva_distance_kinds', PACKAGE = 'Rcppsva')
+}
+
+#' Give an order of Matrix by row | column
+#' Question : how to deal with the vector contain multiple tie values
+#' @title matrix_rank
+#' @param M matrix for calculation rank
+#' @param by  row(1, default); col(2)
+#' @return ranked_matrix matrix represented by each (row/col) order
+#' @export
+matrix_rank <- function(M, by) {
+    .Call('Rcppsva_matrix_rank', PACKAGE = 'Rcppsva', M, by)
+}
+
