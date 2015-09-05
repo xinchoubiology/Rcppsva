@@ -120,12 +120,12 @@ moduleSearch <- function(beta.expr = NULL, cor.type = c("pearson", "spearman"),
     stop("methylation beta value matrix is needed by moduleSearch function ...")
   }
   cor.type <- match.arg(cor.type)
-  sim.type <- match.arg(sim.type) == "signed"
+  sim.type <- match.arg(sim.type)
   method   <- match.arg(method)
   
   
   # clustering by Rclusterpp.hclust
-  dendro <- HClust(beta.dissim, method = method, distance = cor.type, signed = sim.type)
+  dendro <- HClust(beta.dissim, method = method, distance = cor.type, sign = sim.type)
   
   # TODO : find optimal clusters based on dendrogram
 }

@@ -5,7 +5,7 @@
 \title{HClust}
 \usage{
 HClust(data = NULL, method = "average", distance = "euclidean", p = 2,
-  signed = TRUE)
+  sign = c("signed", "unsigned"))
 }
 \arguments{
 \item{data}{matrix of beta data}
@@ -16,7 +16,7 @@ HClust(data = NULL, method = "average", distance = "euclidean", p = 2,
 
 \item{p}{power of the Minkowski distance.}
 
-\item{signed}{Logical; TRUE(default)}
+\item{sign}{Logical; TRUE(default)}
 }
 \value{
 An object of class *hclust* which describes the tree produced by the clustering process

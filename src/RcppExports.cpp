@@ -123,15 +123,15 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
-// matrix_rank
-arma::mat matrix_rank(const arma::mat& M, SEXP by);
-RcppExport SEXP Rcppsva_matrix_rank(SEXP MSEXP, SEXP bySEXP) {
+// rankm
+arma::mat rankm(const arma::mat& M, SEXP byrow);
+RcppExport SEXP Rcppsva_rankm(SEXP MSEXP, SEXP byrowSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< const arma::mat& >::type M(MSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type by(bySEXP);
-    __result = Rcpp::wrap(matrix_rank(M, by));
+    Rcpp::traits::input_parameter< SEXP >::type byrow(byrowSEXP);
+    __result = Rcpp::wrap(rankm(M, byrow));
     return __result;
 END_RCPP
 }

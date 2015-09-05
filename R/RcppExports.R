@@ -107,13 +107,12 @@ distance_kinds <- function() {
 }
 
 #' Give an order of Matrix by row | column
-#' Question : how to deal with the vector contain multiple tie values
-#' @title matrix_rank
+#' @title rankm
 #' @param M matrix for calculation rank
-#' @param by  row(1, default); col(2)
+#' @param byrow  TRUE(FALSE; By column)
 #' @return ranked_matrix matrix represented by each (row/col) order
 #' @export
-matrix_rank <- function(M, by) {
-    .Call('Rcppsva_matrix_rank', PACKAGE = 'Rcppsva', M, by)
+rankm <- function(M, byrow) {
+    .Call('Rcppsva_rankm', PACKAGE = 'Rcppsva', M, byrow)
 }
 

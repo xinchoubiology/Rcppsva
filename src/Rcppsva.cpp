@@ -298,46 +298,79 @@ namespace Rcpp{
     switch (as<int>(x)) {
     default: throw not_compatible("Matrix rank direction invalid or not yet supported");
     case 1: return RcppsvaHClust::ROW;
-    case 2: return RcppsvaHClust::COL;
+    case 0: return RcppsvaHClust::COL;
     }
   }
 } // Rcpp
 
 
 //' Give an order of Matrix by row | column
-//' Question : how to deal with the vector contain multiple tie values
-//' @title matrix_rank
+//' @title rankm
 //' @param M matrix for calculation rank
-//' @param by  row(1, default); col(2)
+//' @param byrow  TRUE(FALSE; By column)
 //' @return ranked_matrix matrix represented by each (row/col) order
 //' @export
 //  [[Rcpp::export]]
-arma::mat matrix_rank(const arma::mat& M, SEXP by){
-  arma::mat ranks = arma::zeros(M.n_rows, M.n_cols);
+arma::mat rankm(const arma::mat& M, SEXP byrow){
   
-  RcppsvaHClust::ByKinds byl = Rcpp::as<RcppsvaHClust::ByKinds>(by);
-  switch (byl) {
+  RcppsvaHClust::ByKinds by = Rcpp::as<RcppsvaHClust::ByKinds>(byrow);
+  switch (by) {
   default:
     throw std::invalid_argument("only by row(by = 1) and by col(by = 2) can be used in this function.");
   case RcppsvaHClust::ROW: {
+    arma::mat Ranks = arma::zeros(M.n_rows, M.n_cols);
     #pragma omp parallel for num_threads(OMP_NUM_THREADS)
-    for(int i = 0; i < M.n_rows; i++){
-      arma::uvec sorts = arma::sort_index(M.row(i));
-      for(int j = 0; j < M.n_cols; j++){
-        ranks(i, j) = sorts(j);
-      } 
+    for(unsigned int i = 0; i < M.n_rows; i++){
+      arma::rowvec sorted = arma::sort(M.row(i));
+      #pragma omp parallel for num_threads(OMP_NUM_THREADS)
+      for(unsigned int m = 0; m < M.n_cols; m++){
+        for(unsigned int j = 0; j < M.n_cols; j++){
+          if(m == 0){
+            Ranks(i, j) += 1;
+            continue;
+          }
+          if((M(i, j) >= sorted(m) && sorted(m) != sorted(m-1))){
+            Ranks(i, j) += 1;
+          }
+          else if(M(i, j) == sorted(m) && sorted(m) == sorted(m-1)){
+            Ranks(i, j) += 0.5;
+          }
+          else if(M(i, j) > sorted(m)){
+            Ranks(i, j) += 1;
+          }
+        }
+      }
     }
-    return ranks;
+    return Ranks;
   }
   case RcppsvaHClust::COL: {
+    arma::mat Ranks = arma::zeros(M.n_cols, M.n_rows);
+    arma::mat tM    = M.t();
     #pragma omp parallel for num_threads(OMP_NUM_THREADS)
-    for(int i = 0; i < M.n_cols; i++){
-      arma::uvec sorts = arma::sort_index(M.col(i));
-      for(int j = 0; j < M.n_rows; j++){
-        ranks(j, i) = sorts(j);
-      } 
+    for(unsigned int i = 0; i < M.n_cols; i++){
+      arma::vec sorted = arma::sort(M.col(i));
+      #pragma omp parallel for num_threads(OMP_NUM_THREADS)
+      for(unsigned int m = 0; m < M.n_rows; m++){
+        for(unsigned int j = 0; j < M.n_rows; j++){
+          if(m == 0){
+            Ranks(i, j) += 1;
+            continue;
+          }
+            
+          if((tM(i, j) >= sorted(m) && sorted(m) != sorted(m-1))){
+            Ranks(i, j) += 1;
+          }
+          else if(tM(i, j) == sorted(m) && sorted(m) == sorted(m-1)){
+            Ranks(i, j) += 0.5;
+          }
+          else if(tM(i, j) > sorted(m)){
+            Ranks(i, j) += 1;
+          }
+        }
+      }
     }
-    return ranks;
+    return Ranks.t(); 
   }
+    
   }
 }

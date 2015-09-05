@@ -599,11 +599,11 @@ hclust_from_data <- function(data, link, dist, minkowski){
 #' @param method The agglomeration method to be used. This must be one of "ward", "single", "complete" or "average"
 #' @param distance The distance measure to be used. This must be one of "euclidiean", "manhattan", "maximum", or "minkowski".
 #' @param p power of the Minkowski distance.
-#' @param signed Logical; TRUE(default)
+#' @param sign Logical; TRUE(default)
 #' @return An object of class *hclust* which describes the tree produced by the clustering process
 #' @export
 #' @author Xin Zhou \url{xxz220@@miami.edu}
-HClust <- function(data = NULL, method = "average", distance = "euclidean", p = 2, signed = TRUE){
+HClust <- function(data = NULL, method = "average", distance = "euclidean", p = 2, sign = c("signed", "unsigned")){
   options(warn = -1)
   if(method == "ward" && distance != "euclidean"){
     warning("Distance method is forced to (squared) 'euclidean' distance for Ward's method")
@@ -613,16 +613,15 @@ HClust <- function(data = NULL, method = "average", distance = "euclidean", p = 
     stop("Beta matrix is needed for Chclust")
   }
   if(distance == "spearman"){
-    data <- apply(data, 2, rank)
+    data <- rankm(as.matrix(data), byrow = TRUE)
     distance <- "pearson"
   }
-  if(distance == "pearson"){
-    if(signed){
-      distance <- paste("signed", distance, sep = ".")
-    } else{
-      distance <- paste("unsigned", distance, sep = ".")
-    }
+  
+  signed <- match.arg(sign)
+  if(distance %in% c("pearson", "spearman")){
+    distance <- paste(signed, distance, sep = ".")
   }
+  
   method <- pmatch(method, linkage_kinds())
   if(is.na(method)){
     stop("clustering method is not support by Rcppsva ...")
