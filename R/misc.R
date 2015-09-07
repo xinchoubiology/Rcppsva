@@ -637,6 +637,7 @@ HClust <- function(data = NULL, method = "average", distance = "euclidean", p = 
     stop("ambigous distance metric ...")
   }
   
+  cat("  start hierachical clustering ...")
   hcl <- hclust_from_data(as.matrix(data), link = method, dist = distance, minkowski = p)
   hcl$labels      <- row.names(data)
   hcl$methods     <- linkage_kinds()[method]
