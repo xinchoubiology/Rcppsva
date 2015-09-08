@@ -22,3 +22,8 @@ Rcpp Integration Surrogate Variable Analysis and Rewrite by RcppEigen and RcppGS
 + @Jun, 11. Pass weight argument to \link{combp} function should be fixed
 
 + @Jun, 14. correct the `correlateClusterMaker` and `Segments` overlap problem, actually, we should decovolute the `correlateClusterMaker` and `Segments`.
+
+# Rcppsva 0.1.4
++ @Sep, 6.  fast hierachical clustering by rnn added. R-comapatible hclust object will return by \link{HClust} function
++ @Sep, 8.  Bugs fixed for \link{HClust}, which occurs when a lot of 0-distance node pairs exist.
+

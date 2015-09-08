@@ -1,6 +1,6 @@
 Package: Rcppsva
 Title: Rcpp Integration Surrogate Variable Analysis
-Version: 0.1.3
+Version: 0.1.4
 Author: Jeffrey T. Leek <jtleek@gmail.com>, W. Evan Johnson <wej@bu.edu>,
     Hilary S. Parker <hiparker@jhsph.edu>, Elana J. Fertig <ejfertig@jhmi.edu>,
     Andrew E. Jaffe <ajaffe@jhsph.edu>, John D. Storey <jstorey@princeton.edu>,
