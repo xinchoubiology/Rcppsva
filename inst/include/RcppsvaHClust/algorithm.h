@@ -6,6 +6,9 @@
 #include <algorithm>
 #include <functional>
 #include <stack>
+#include <omp.h>
+
+#define OMP_NUM_THREADS omp_get_max_threads()
 
 #include <RcppsvaHClust/cluster.h>
 #include <RcppsvaHClust/util.h>
@@ -26,16 +29,12 @@ namespace RcppsvaHClust {
 		Dist_t         min_d = max_dist;
 
 
-#ifdef _OPENMP
-		#pragma omp parallel shared(min_i, min_d, distancer)	
-#endif
+		#pragma omp parallel shared(min_i, min_d, distancer) num_threads(OMP_NUM_THREADS)
 		{
 			RandomIterator min_i_l;
 			Dist_t         min_d_l = min_d;
 
-#ifdef _OPENMP
-			#pragma omp for nowait	
-#endif
+			#pragma omp for nowait
 			for (ssize_t i=0; i<(last-first); i++) {
 				Dist_t dist = distancer(*(first+i), min_d_l);				
 				if (dist < min_d_l) {
@@ -44,9 +43,7 @@ namespace RcppsvaHClust {
 				}
 			}
 
-#ifdef _OPENMP
-			#pragma omp critical	
-#endif
+			#pragma omp critical
 			{
 				if (min_d_l < min_d) {
 					min_i = min_i_l; 
@@ -181,9 +178,7 @@ namespace RcppsvaHClust {
 
 			// Step 2: Build out pairwise distances from objects in pointer
 			// represenation to the new object
-#ifdef _OPENMP	
-			#pragma omp parallel for shared(i, M)
-#endif
+			#pragma omp parallel for shared(i, M) num_threads(OMP_NUM_THREADS)
 			for (ssize_t j=0; j<(ssize_t)i; j++) {
 				M[j] = distancer(i, j); 
 			}
@@ -230,5 +225,6 @@ namespace RcppsvaHClust {
 	}
 
 } // end of RcppsvaHClust namespace
+
 
 #endif
