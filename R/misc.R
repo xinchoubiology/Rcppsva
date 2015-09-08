@@ -646,3 +646,4 @@ HClust <- function(data = NULL, method = "average", distance = "euclidean", p = 
   class(hcl)      <- "hclust"
   hcl
 }
+

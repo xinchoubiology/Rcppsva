@@ -62,7 +62,11 @@ inline bool compare_id(Cluster const* l, Cluster const* r) {
 
 template<class Cluster>
 inline bool compare_disimilarity(Cluster const* l, Cluster const* r) {
-  return l->disimilarity() < r->disimilarity();
+  if(l->disimilarity() != r->disimilarity()){
+    return l->disimilarity() < r->disimilarity();
+  } else{
+    return l->size() < r->size();
+  }
 }
 
 

@@ -25,6 +25,7 @@ namespace RcppsvaHClust {
 		RandomIterator min_i = last;
 		Dist_t         min_d = max_dist;
 
+
 #ifdef _OPENMP
 		#pragma omp parallel shared(min_i, min_d, distancer)	
 #endif

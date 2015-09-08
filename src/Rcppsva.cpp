@@ -374,3 +374,7 @@ arma::mat rankm(const arma::mat& M, SEXP byrow){
     
   }
 }
+
+
+
+
