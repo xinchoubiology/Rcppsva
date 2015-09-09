@@ -16,8 +16,8 @@ enum DistanceKinds {
   MAXIMUM,
   MINKOWSKI,
   // correlation enumerator for dissimilrity
-  SIGNED_PEARSON,
-  UNSIGNED_PEARSON
+  SCOSINE,
+  UCOSINE
 };
 
 enum ByKinds {

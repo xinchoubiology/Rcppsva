@@ -288,8 +288,8 @@ Rcpp::CharacterVector distance_kinds(){
   lk[1] = "manhattan";
   lk[2] = "maximum";
   lk[3] = "minkowski";
-  lk[4] = "signed.pearson";
-  lk[5] = "unsigned.pearson";
+  lk[4] = "scosine";
+  lk[5] = "ucosine";
   return lk;
 }
 

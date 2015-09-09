@@ -599,11 +599,11 @@ hclust_from_data <- function(data, link, dist, minkowski){
 #' @param method The agglomeration method to be used. This must be one of "ward", "single", "complete" or "average"
 #' @param distance The distance measure to be used. This must be one of "euclidiean", "manhattan", "maximum", or "minkowski".
 #' @param p power of the Minkowski distance.
-#' @param sign Logical; TRUE(default)
+#' @param sign Optional 'U' for unsigned and 'S' for signed dissimilarity
 #' @return An object of class *hclust* which describes the tree produced by the clustering process
 #' @export
 #' @author Xin Zhou \url{xxz220@@miami.edu}
-HClust <- function(data = NULL, method = "average", distance = "euclidean", p = 2, sign = c("signed", "unsigned")){
+HClust <- function(data = NULL, method = "average", distance = "euclidean", p = 2, sign = c("S", "U")){
   options(warn = -1)
   if(method == "ward" && distance != "euclidean"){
     warning("Distance method is forced to (squared) 'euclidean' distance for Ward's method")
@@ -617,9 +617,13 @@ HClust <- function(data = NULL, method = "average", distance = "euclidean", p = 
     distance <- "pearson"
   }
   
-  signed <- match.arg(sign)
-  if(distance %in% c("pearson", "spearman")){
-    distance <- paste(signed, distance, sep = ".")
+  sign <- match.arg(sign)
+  if(distance == "pearson"){
+    if(sign == "S"){
+      distance <- "scosine"
+    } else{
+      distance <- "ucosine"
+    }
   }
   
   method <- pmatch(method, linkage_kinds())
@@ -646,4 +650,9 @@ HClust <- function(data = NULL, method = "average", distance = "euclidean", p = 
   class(hcl)      <- "hclust"
   hcl
 }
+
+#' optimal cluster script is a collection for optimal cluster number determination
+#' optimal height selection, when given an array of candidate height, we can use gap
+#' statistic for cut-height determination.
+
 

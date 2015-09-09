@@ -59,14 +59,14 @@ typename V::RealScalar minkowski_distance(const V& a, const V& b) {
 
 // unsigned and signed dissimilarity metrics
 template<class V>
-typename V::RealScalar signed_pearson(const V& a, const V& b){
+typename V::RealScalar scosine(const V& a, const V& b){
   using namespace Eigen;
   return (1 - Eigen::cor(a, b)) / 2;
 }
 
 
 template<class V>
-typename V::RealScalar unsigned_pearson(const V& a, const V& b){
+typename V::RealScalar ucosine(const V& a, const V& b){
   using namespace Eigen;
   return abs(Eigen::cor(a, b));
 }
@@ -298,10 +298,10 @@ stored_data_rows(const Matrix& m, DistanceKinds dk, double minkowski=1.0) {
   case RcppsvaHClust::MINKOWSKI:
     Methods::minkowski_power_g = minkowski;
     return distancer_type(m, std::ptr_fun(&Methods::minkowski_distance<typename CONST_ROW>));
-  case RcppsvaHClust::SIGNED_PEARSON:
-    return distancer_type(m, std::ptr_fun(&Methods::signed_pearson<typename CONST_ROW>));
-  case RcppsvaHClust::UNSIGNED_PEARSON:
-    return distancer_type(m, std::ptr_fun(&Methods::unsigned_pearson<typename CONST_ROW>));
+  case RcppsvaHClust::SCOSINE:
+    return distancer_type(m, std::ptr_fun(&Methods::scosine<typename CONST_ROW>));
+  case RcppsvaHClust::UCOSINE:
+    return distancer_type(m, std::ptr_fun(&Methods::ucosine<typename CONST_ROW>));
   }
 }
 

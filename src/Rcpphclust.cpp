@@ -30,8 +30,8 @@ template <> RcppsvaHClust::DistanceKinds as(SEXP x){
   case 2: return RcppsvaHClust::MANHATTAN;
   case 3: return RcppsvaHClust::MAXIMUM;
   case 4: return RcppsvaHClust::MINKOWSKI;
-  case 5: return RcppsvaHClust::SIGNED_PEARSON;
-  case 6: return RcppsvaHClust::UNSIGNED_PEARSON;
+  case 5: return RcppsvaHClust::SCOSINE;
+  case 6: return RcppsvaHClust::UCOSINE;
   }
 }
 
