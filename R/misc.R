@@ -641,7 +641,7 @@ HClust <- function(data = NULL, method = "average", distance = "euclidean", p = 
     stop("ambigous distance metric ...")
   }
   
-  cat("  start hierachical clustering ...")
+  cat("  start hierachical clustering ... \n")
   hcl <- hclust_from_data(as.matrix(data), link = method, dist = distance, minkowski = p)
   hcl$labels      <- row.names(data)
   hcl$methods     <- linkage_kinds()[method]
@@ -651,8 +651,42 @@ HClust <- function(data = NULL, method = "average", distance = "euclidean", p = 
   hcl
 }
 
-#' optimal cluster script is a collection for optimal cluster number determination
-#' optimal height selection, when given an array of candidate height, we can use gap
-#' statistic for cut-height determination.
+# optimal cluster script is a collection for optimal cluster number determination
+# optimal height selection, when given an array of candidate height, we can use gap
+# statistic for cut-height determination.
+
+#' To calculate the optimal cluster number of our data, we need a reference distribution
+#' generation for NULL_DENDROGRAM
+#' @title distributeRef
+#' @param edat  data matrix to sampled
+#' @param size  bootstrap sampling size
+#' @param by    data will independent by row('R')[Default] or by column
+#' @param n     restrict sampled data matrix size
+#' @param mcores parallel threads to be used 
+#' @return list of NULL dendrogram objects
+#' @export 
+#' @author Xin Zhou \url{xxz220@@miami.edu}
+distributeRef <- function(edat = NULL, size = 10, by = 'R', n = 1000, mcores = 2, ...){
+  options(warn = -1)
+  if(is.null(edat)){
+    stop("background data matrix is not supported . ")
+  }
+  NULL_dendrogram <- llply(1:size, function(x){
+                                      set.seed(x + 1001)
+                                      sdat <- do.call(cbind, 
+                                                       llply(1:ncol(edat), 
+                                                             function(ix)
+                                                             {
+                                                               edat[sample(1:nrow(edat), n, replace = TRUE),]
+                                                             })
+                                                     )
+                                      list(hclust = HClust(sdat, ...), data = sdat)
+                                   })
+  NULL_dendrogram
+}
+
+
+
+
 
 
