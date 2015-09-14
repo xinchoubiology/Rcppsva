@@ -4,8 +4,8 @@
 \alias{distributeRef}
 \title{distributeRef}
 \usage{
-distributeRef(data = NULL, size = 10, by = "R", n = 1000, mcores = 2,
-  ...)
+distributeRef(data = NULL, size = 10, by = "R", n = 1000,
+  umethod = c("uniform", "bootstrap"), mcores = 2, ...)
 }
 \arguments{
 \item{data}{data matrix to sampled}
@@ -15,6 +15,9 @@ distributeRef(data = NULL, size = 10, by = "R", n = 1000, mcores = 2,
 \item{by}{data will independent by row('R')[Default] or by column}
 
 \item{n}{restrict sampled data matrix size}
+
+\item{umethod}{'uniform'(Default). Method for sampling reference null distribution.
+c('uniform', 'bootstrap')}
 
 \item{mcores}{parallel threads to be used}
 }

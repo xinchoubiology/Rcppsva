@@ -663,22 +663,31 @@ HClust <- function(data = NULL, method = "average", distance = "euclidean", p = 
 #' @param size  bootstrap sampling size
 #' @param by    data will independent by row('R')[Default] or by column
 #' @param n     restrict sampled data matrix size
+#' @param umethod 'uniform'(Default). Method for sampling reference null distribution.
+#'               c('uniform', 'bootstrap')
 #' @param mcores parallel threads to be used 
 #' @return list of NULL dendrogram objects
 #' @export 
 #' @author Xin Zhou \url{xxz220@@miami.edu}
-distributeRef <- function(data = NULL, size = 10, by = 'R', n = 1000, mcores = 2, ...){
+distributeRef <- function(data = NULL, size = 10, by = 'R', n = 1000, 
+                          umethod = c('uniform', 'bootstrap'), mcores = 2, ...){
   options(warn = -1)
   if(is.null(data)){
     stop("background data matrix is not supported . ")
   }
+  umethod <- match.arg(umethod)
   NULL_dendrogram <- llply(1:size, function(x){
                                       set.seed(x + 1001)
                                       sdat <- do.call(cbind, 
                                                        llply(1:ncol(data), 
                                                              function(ix)
                                                              {
-                                                               data[sample(1:nrow(data), n, replace = TRUE),]
+                                                               if(umethod == "bootstrap"){
+                                                                 data[sample(1:nrow(data), n, replace = TRUE), ix, drop = TRUE]
+                                                               } else{
+                                                                 # uniform distribution subtitute bootstrap
+                                                                 runif(n, min = min(data[,ix]), max = max(data[,ix]))
+                                                               }
                                                              })
                                                      )
                                       list(hclust = HClust(sdat, ...), data = sdat)
