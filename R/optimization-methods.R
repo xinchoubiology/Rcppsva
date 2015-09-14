@@ -64,6 +64,8 @@ gapStat <- function(data = NULL, dendro = NULL, dendref = NULL,
     Hk <- c(Hk, height)
     
     Wk0   <- NULL
+    ## specify the data imbalance scale
+    scale <- nrow(data) / nrow(dendref[[1]]$data)
     for(i in 1:length(dendref)){
       Reftree  <- cutree(dendref[[i]]$hclust, k = number)
       Refgroup <- split(1:length(Reftree), Reftree)
@@ -74,9 +76,9 @@ gapStat <- function(data = NULL, dendro = NULL, dendref = NULL,
                                       N <- length(x)
                                       W <- cor(t(dendref[[i]]$data[x,]), method = params$distance)
                                       if(params$sign == "S"){
-                                        sum((1 - W) / 2) / (2 * N)
+                                        sum((1 - W) / 2) / (2 * N) * scale
                                       } else{
-                                        sum(1 - abs(W)) / (2 * N)
+                                        sum(1 - abs(W)) / (2 * N) * scale
                                       }
                                     }
                                   })
