@@ -5,10 +5,10 @@
 \title{moduleSearch}
 \usage{
 moduleSearch(beta.expr = NULL, cor.type = c("pearson", "spearman"),
-  sim.type = c("signed", "unsigned"), method = c("average", "ward",
-  "single", "complete"), deepSplit = 1, cutHeight = 0.9,
-  minClusterSize = min(10, ncol(beta.expr)/2), pamStage = TRUE,
-  pamRespectsDendro = TRUE, verbose = 2, ...)
+  sim.type = c("S", "U"), method = c("average", "ward", "single",
+  "complete"), deepSplit = 1, cutHeight = 0.9, minClusterSize = min(10,
+  ncol(beta.expr)/2), pamStage = TRUE, pamRespectsDendro = TRUE,
+  verbose = 2, ...)
 }
 \arguments{
 \item{beta.expr}{pre-clustered genome region for co-regulation methylation status}

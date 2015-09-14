@@ -109,7 +109,7 @@ Eigenbeta <- function(mset = NULL, cluster = NULL, nPC = 1, verbose = TRUE,
 #  I'll introduce the Rclusterpp module in my package and finally
 #  I can directly transfer the beta value matrix in to hclust function
 moduleSearch <- function(beta.expr = NULL, cor.type = c("pearson", "spearman"),
-                         sim.type = c("signed", "unsigned"),
+                         sim.type = c("S", "U"),
                          method   = c("average", "ward", "single", "complete"),
                          deepSplit = 1, cutHeight = 0.9, 
                          minClusterSize = min(10, ncol(beta.expr)/2), 
@@ -125,8 +125,15 @@ moduleSearch <- function(beta.expr = NULL, cor.type = c("pearson", "spearman"),
   
   
   # clustering by Rclusterpp.hclust
-  dendro <- HClust(beta.dissim, method = method, distance = cor.type, sign = sim.type)
+  dendro <- HClust(beta.expr, method = method, distance = cor.type, sign = sim.type)
   
-  # TODO : find optimal clusters based on dendrogram
+  # reference dendrogram
+  dendro.ref <- distributeRef(data = beta.expr, size = 20, by = 'R', n = nrow(beta.expr), distance = "pearson", sign = "S")
+  
+  dendromodule <- clusterDetect(data = beta.expr, dendro = dendro, dendref = dendro.ref, log =TRUE, distance = cor.type, sign = sim.type)
+  
+  modules   <- optimModule(dendromodule, dendro = dendro, plot = TRUE)
+  
+  modules
 }
 

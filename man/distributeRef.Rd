@@ -4,11 +4,11 @@
 \alias{distributeRef}
 \title{distributeRef}
 \usage{
-distributeRef(edat = NULL, size = 10, by = "R", n = 1000, mcores = 2,
+distributeRef(data = NULL, size = 10, by = "R", n = 1000, mcores = 2,
   ...)
 }
 \arguments{
-\item{edat}{data matrix to sampled}
+\item{data}{data matrix to sampled}
 
 \item{size}{bootstrap sampling size}
 
