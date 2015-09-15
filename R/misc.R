@@ -665,19 +665,27 @@ HClust <- function(data = NULL, method = "average", distance = "euclidean", p = 
 #' @param n     restrict sampled data matrix size
 #' @param umethod 'uniform'(Default). Method for sampling reference null distribution.
 #'               c('uniform', 'bootstrap')
-#' @param mcores parallel threads to be used 
+#' @param mcores parallel threads to be used
+#' @param verbose FALSE 
 #' @return list of NULL dendrogram objects
 #' @export 
 #' @author Xin Zhou \url{xxz220@@miami.edu}
 distributeRef <- function(data = NULL, size = 10, by = 'R', n = 1000, 
-                          umethod = c('uniform', 'bootstrap'), mcores = 2, ...){
+                          umethod = c('uniform', 'bootstrap'), verbose = FALSE,
+                          mcores = 2, ...){
   options(warn = -1)
   if(is.null(data)){
     stop("background data matrix is not supported . ")
   }
   umethod <- match.arg(umethod)
   NULL_dendrogram <- llply(1:size, function(x){
+                                      if(verbose){
+                                        cat(sprintf("\t simulating %d round reference distribution ...\n", x))
+                                      }
                                       set.seed(x + 1001)
+                                      if(mcores >= 2){
+                                        registerDoMC(cores = mcores)
+                                      }
                                       sdat <- do.call(cbind, 
                                                        llply(1:ncol(data), 
                                                              function(ix)
@@ -688,8 +696,11 @@ distributeRef <- function(data = NULL, size = 10, by = 'R', n = 1000,
                                                                  # uniform distribution subtitute bootstrap
                                                                  runif(n, min = min(data[,ix]), max = max(data[,ix]))
                                                                }
-                                                             })
+                                                             }, .parallel = TRUE)
                                                      )
+                                      if(verbose){
+                                        cat(sprintf("\t hierachical clustering ... \n"))
+                                      }
                                       list(hclust = HClust(sdat, ...), data = sdat)
                                    })
   NULL_dendrogram
