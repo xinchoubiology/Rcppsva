@@ -671,13 +671,17 @@ HClust <- function(data = NULL, method = "average", distance = "euclidean", p = 
 #' @export 
 #' @author Xin Zhou \url{xxz220@@miami.edu}
 distributeRef <- function(data = NULL, size = 10, by = 'R', n = 1000, 
-                          umethod = c('uniform', 'bootstrap'), verbose = FALSE,
+                          umethod = c('uniform', 'bootstrap', 'MCMC'), verbose = FALSE,
                           mcores = 2, ...){
   options(warn = -1)
   if(is.null(data)){
     stop("background data matrix is not supported . ")
   }
   umethod <- match.arg(umethod)
+  if(umethod == "MCMC"){
+    R <- svd(data)
+    X <- data %*% R$v
+  }
   NULL_dendrogram <- llply(1:size, function(x){
                                       if(verbose){
                                         cat(sprintf("\t simulating %d round reference distribution ...\n", x))
@@ -692,12 +696,17 @@ distributeRef <- function(data = NULL, size = 10, by = 'R', n = 1000,
                                                              {
                                                                if(umethod == "bootstrap"){
                                                                  data[sample(1:nrow(data), n, replace = TRUE), ix, drop = TRUE]
+                                                               } else if(umethod == "MCMC"){
+                                                                 runif(n, min = min(X[,ix]), max = max(X[,ix]))
                                                                } else{
                                                                  # uniform distribution subtitute bootstrap
                                                                  runif(n, min = min(data[,ix]), max = max(data[,ix]))
                                                                }
                                                              }, .parallel = TRUE)
                                                      )
+                                      if(umethod == "MCMC"){
+                                        sdat <- tcrossprod(sdat, R$v)
+                                      }
                                       if(verbose){
                                         cat(sprintf("\t hierachical clustering ... \n"))
                                       }
@@ -705,9 +714,3 @@ distributeRef <- function(data = NULL, size = 10, by = 'R', n = 1000,
                                    })
   NULL_dendrogram
 }
-
-
-
-
-
-

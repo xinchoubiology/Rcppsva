@@ -5,7 +5,8 @@
 \title{distributeRef}
 \usage{
 distributeRef(data = NULL, size = 10, by = "R", n = 1000,
-  umethod = c("uniform", "bootstrap"), verbose = FALSE, mcores = 2, ...)
+  umethod = c("uniform", "bootstrap", "MCMC"), verbose = FALSE,
+  mcores = 2, ...)
 }
 \arguments{
 \item{data}{data matrix to sampled}

@@ -6,7 +6,9 @@
 #' @param dendref reference dendrogram
 #' @param cmax    maximum dissimilarity Default 0.22
 #' @param cmin    minimun dissimilarity Default 0.02
+#' @param by      step size of height serarch
 #' @param log     FALSE(Default). Standardize by log or not
+#' @param mcore   number of threads running
 #' @param verbose verbose 
 #' @param ...     optional parameters for \code{distributeRef} and \code{HClust}
 #' @return list of clusterDetect
@@ -17,8 +19,8 @@
 #' @export
 #' @author Xin Zhou \url{xxz220@@miami.edu}
 gapStat <- function(data = NULL, dendro = NULL, dendref = NULL, 
-                    cmax = 0.22, cmin = 0.02, log = FALSE, 
-                    verbose = TRUE, ...){
+                    cmax = 0.24, cmin = 0.04, by = -0.005, mcore = 2,
+                    log = FALSE, verbose = TRUE, ...){
   options(warn = -1)
   if(is.null(data)){
     stop("Methylation beta / M matrix is needed for clustering")
@@ -32,13 +34,18 @@ gapStat <- function(data = NULL, dendro = NULL, dendref = NULL,
     dendref <- distributeRef(data = data, ...)
   }
   
+  if(mcore >= 2){
+    registerDoMC(cores = mcore)
+  }
+  
   K <- NULL
   Wk       <- NULL
   ExpWk    <- NULL
+  SWk      <- NULL
   Ik       <- NULL   # Inter clusters dissimilarity
   Hk       <- NULL
   
-  for(height in seq(cmax, cmin, by = -0.01)){
+  for(height in seq(cmax, cmin, by = by)){
     if(verbose){
       cat("  Detecting clustering performance of height cut @ ", height, "...\n")
     }
@@ -56,7 +63,7 @@ gapStat <- function(data = NULL, dendro = NULL, dendref = NULL,
                                   sum((1 - abs(W))) / (2 * N)
                                 }
                               }
-                            })
+                            }, .parallel = TRUE)
     
     ## get cluster number
     number <- length(unique(Htree))
@@ -81,18 +88,20 @@ gapStat <- function(data = NULL, dendro = NULL, dendref = NULL,
                                         sum(1 - abs(W)) / (2 * N)  # * scale
                                       }
                                     }
-                                  })
+                                  }, .parallel = TRUE)
       Wk0 <- c(Wk0, do.call(sum, Refcor))
     }
     if(log){
-      ExpWk <- c(ExpWk, log(mean(Wk0)))
+      ExpWk <- c(ExpWk, mean(log(Wk0)))
+      SWk   <- sqrt(1+1/length(dendref)) * sd(log(Wk0))
       Wk    <- c(Wk, log(do.call(sum, Hcorr)))
     } else{
       ExpWk <- c(ExpWk, mean(Wk0))
+      SWk   <- sqrt(1+1/length(dendref)) * sd(Wk0)
       Wk    <- c(Wk, do.call(sum, Hcorr))
     }
   }
-  ret <- data.frame(H = Hk, K = K, Wk = Wk, EWk = ExpWk, Gap = ExpWk - Wk)
+  ret <- data.frame(H = Hk, K = K, Wk = Wk, EWk = ExpWk, Gap = ExpWk - Wk, Sk = SWk)
   
   ret
 }
@@ -123,8 +132,15 @@ optimModule <- function(gstat = NULL, dendro = NULL, plot = TRUE, verbose = TRUE
   }
   
   ixmax <- which.max(gstat$Gap)
+  Kmin  <- NULL
+  for(i in 1:(nrow(gstat)-1)){
+    if(gstat$Gap[i] >= gstat$Gap[i+1] + gstat$Sk[i+1]){
+      Kmin <- gstat$K[i]
+      break
+    }
+  }
   trees <- cutree(dendro, h = gstat$H[ixmax])
-  ret   <- list(labels = trees, K = gstat$K[ixmax], height = gstat$H[ixmax], ggWk = ggWk, ggGap = ggGap)
+  ret   <- list(labels = trees, Kmax = gstat$K[ixmax], Kmin = Kmin, height = gstat$H[ixmax], ggWk = ggWk, ggGap = ggGap)
   class(ret) <- "module"
   
   ret
@@ -139,7 +155,8 @@ optimModule <- function(gstat = NULL, dendro = NULL, plot = TRUE, verbose = TRUE
 #' @method print module
 #' @export
 print.module <- function(x, ...){
-  cat(sprintf(" %d clusters based on hierachical clustering gap statistic \n", x$K))
+  cat(sprintf(" %d clusters based on hierachical clustering gap statistic \n", x$Kmax))
+  cat(sprintf(" minimal cluster number is %d", x$Kmin))
   cat(sprintf(" cut height threshold = %f \n", x$height))
   cat(sprintf(" minimal correlation within defined clusters = %f \n", 1 - 2 * x$height))
 }
