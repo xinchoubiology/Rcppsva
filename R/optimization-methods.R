@@ -125,7 +125,7 @@ optimModule <- function(gstat = NULL, dendro = NULL, plot = TRUE, verbose = TRUE
     geom_point()
   
   ggGap <- ggplot(gstat, aes(x = K, y = Gap)) + geom_line(lty = 1, lwd = 1.5) + 
-    geom_point() + ggtitle("number & cluster gap statistic")
+    geom_point() +  geom_errorbar(aes(ymin=Gap-Sk, ymax=Gap+Sk), width = 2, color = "blue") + ggtitle("number & cluster gap statistic")
   
   if(plot){
     ggGap

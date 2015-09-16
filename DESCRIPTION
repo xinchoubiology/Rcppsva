@@ -32,7 +32,7 @@ LazyData: TRUE
 ByteCompile: TRUE
 Depends: R (>= 2.8), genefilter, fastICA, qvalue, limma, foreach, plyr, doMC, 
          GenomicRanges, IRanges, data.table, stringr, ggplot2, reshape2, scales, RColorBrewer, 
-         Rclusterpp, dynamicTreeCut, bigmemory (>= 4.0.0)
+         dynamicTreeCut, bigmemory (>= 4.0.0)
 Suggests: limma, pamr, bladderbatch, BiocStyle, WGCNA,
           testthat, IlluminaHumanMethylation450kanno.ilmn12.hg19
 Imports:
