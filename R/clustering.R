@@ -102,7 +102,6 @@ Eigenbeta <- function(mset = NULL, cluster = NULL, nPC = 1, verbose = TRUE,
 #'         clusters  a vector of cluster labels for all CpG regions
 #'         dendrogram dendrogram of Rclusterpp.hclust
 #' @export
-#' @importFrom dynamicTreeCut cutreeDynamic
 #' @author Xin Zhou \url{xxz220@@miami.edu}
 #  Notice！This function has somthing wrong on memory management
 #  I'll introduce the Rclusterpp module in my package and finally

@@ -302,23 +302,23 @@ corrclusterMaker <- function(dat.m = NULL, chr, pos, cluster = NULL,
   if(is.null(cluster)){
     cluster <- clusterMaker(chr = chr, pos = pos, maxGap = maxGap, names = names)
   }
-  cnames     <- names(cluster)
-  names(pos) <- names
-  rawcluster <- split(cnames, cluster)
-  combIndex  <- which(sapply(rawcluster, function(c) length(c) > 1))
+  cnames      <- names(cluster)
+  names(pos)  <- names
+  rawcluster  <- split(cnames, cluster)
+  combIndex   <- which(sapply(rawcluster, function(c) length(c) > 1))
   multcluster <- rawcluster[combIndex]
   
   ## build correlation matrix within clusters
   if(is.null(corrmat)){
     if(cores >= 2){
       registerDoMC(cores = cores)
-      corrmat   <- llply(multcluster, .fun = function(ix){
+      corrmat    <- llply(multcluster, .fun = function(ix){
                                              dist <- abs(outer(pos[ix], pos[ix], "-"))
                                              # colnames(dist) <- rownames(dist) <- ix
                                              cor(t(dat.m[ix,]), method = method) * (dist < maxGap)
                                            }, .parallel = TRUE)
     }else{
-      corrmat   <- llply(multcluster, .fun = function(ix){
+      corrmat    <- llply(multcluster, .fun = function(ix){
                                              dist <- abs(outer(pos[ix], pos[ix], "-"))
                                              colnames(dist) <- rownames(dist) <- ix
                                              cor(t(dat.m[ix,]), method = method) * (dist < maxGap)

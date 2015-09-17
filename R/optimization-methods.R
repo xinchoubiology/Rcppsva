@@ -45,11 +45,14 @@ gapStat <- function(data = NULL, dendro = NULL, dendref = NULL,
   Ik       <- NULL   # Inter clusters dissimilarity
   Hk       <- NULL
   
-  for(height in seq(cmax, cmin, by = by)){
+  # cut clustering by number
+  kmax <- sum(dendro$height >= cmax) + 1
+  kmin <- sum(dendro$height >= cmin) + 1
+  for(knum in kmax:kmin){
     if(verbose){
       cat("  Detecting clustering performance of height cut @ ", height, "...\n")
     }
-    Htree  <- cutree(dendro, h = height)
+    Htree  <- cutree(dendro, h = knum)
     Hgroup <- split(1:length(Htree), Htree)
     Hcorr  <- llply(Hgroup, function(x){
                               if(length(x) <= 1){
@@ -66,15 +69,15 @@ gapStat <- function(data = NULL, dendro = NULL, dendref = NULL,
                             }, .parallel = TRUE)
     
     ## get cluster number
-    number <- length(unique(Htree))
-    K <- c(K, number)
-    Hk <- c(Hk, height)
+    K      <- c(K, knum)
+    height <- tail(dendro$height, knum-1)[1]
+    Hk     <- c(Hk, height)
     
-    Wk0   <- NULL
+    Wk0    <- NULL
     # specify the data imbalance scale
     # scale <- nrow(data) / nrow(dendref[[1]]$data)
     for(i in 1:length(dendref)){
-      Reftree  <- cutree(dendref[[i]]$hclust, k = number)
+      Reftree  <- cutree(dendref[[i]]$hclust, k = knum)
       Refgroup <- split(1:length(Reftree), Reftree)
       Refcor   <- llply(Refgroup, function(x){
                                     if(length(x) <= 1){
