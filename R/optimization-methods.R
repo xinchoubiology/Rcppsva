@@ -51,7 +51,7 @@ gapStat <- function(data = NULL, dendro = NULL, dendref = NULL,
     if(verbose){
       cat("  Detecting clustering performance of height cut @ ", knum, "...\n")
     }
-    Htree  <- cutree(dendro, h = knum)
+    Htree  <- cutree(dendro, k = knum)
     Hgroup <- split(1:length(Htree), Htree)
     Hcorr  <- llply(Hgroup, function(x){
                               if(length(x) <= 1){
