@@ -6,7 +6,6 @@
 #' @param dendref reference dendrogram
 #' @param cmax    maximum dissimilarity Default 0.22
 #' @param cmin    minimun dissimilarity Default 0.02
-#' @param by      step size of height serarch
 #' @param log     FALSE(Default). Standardize by log or not
 #' @param mcore   number of threads running
 #' @param verbose verbose 
@@ -19,7 +18,7 @@
 #' @export
 #' @author Xin Zhou \url{xxz220@@miami.edu}
 gapStat <- function(data = NULL, dendro = NULL, dendref = NULL, 
-                    cmax = 0.24, cmin = 0.04, by = -0.005, mcore = 2,
+                    cmax = 0.24, cmin = 0.04, mcore = 2,
                     log = FALSE, verbose = TRUE, ...){
   options(warn = -1)
   if(is.null(data)){
@@ -50,7 +49,7 @@ gapStat <- function(data = NULL, dendro = NULL, dendref = NULL,
   kmin <- sum(dendro$height >= cmin) + 1
   for(knum in kmax:kmin){
     if(verbose){
-      cat("  Detecting clustering performance of height cut @ ", height, "...\n")
+      cat("  Detecting clustering performance of height cut @ ", knum, "...\n")
     }
     Htree  <- cutree(dendro, h = knum)
     Hgroup <- split(1:length(Htree), Htree)

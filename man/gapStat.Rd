@@ -5,8 +5,7 @@
 \title{gapStat}
 \usage{
 gapStat(data = NULL, dendro = NULL, dendref = NULL, cmax = 0.24,
-  cmin = 0.04, by = -0.005, mcore = 2, log = FALSE, verbose = TRUE,
-  ...)
+  cmin = 0.04, mcore = 2, log = FALSE, verbose = TRUE, ...)
 }
 \arguments{
 \item{data}{methylation data matrix}
@@ -18,8 +17,6 @@ gapStat(data = NULL, dendro = NULL, dendref = NULL, cmax = 0.24,
 \item{cmax}{maximum dissimilarity Default 0.22}
 
 \item{cmin}{minimun dissimilarity Default 0.02}
-
-\item{by}{step size of height serarch}
 
 \item{mcore}{number of threads running}
 
