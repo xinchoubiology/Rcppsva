@@ -136,7 +136,7 @@ optimModule <- function(gstat = NULL, dendro = NULL, plot = TRUE, verbose = TRUE
   ixmax <- which.max(gstat$Gap)
   Kmin  <- NULL
   for(i in 1:(nrow(gstat)-1)){
-    if(gstat$Gap[i] >= gstat$Gap[i+1] + gstat$Sk[i+1]){
+    if(gstat$Gap[i] >= gstat$Gap[i+1] - gstat$Sk[i+1]){
       Kmin <- gstat$K[i]
       break
     }

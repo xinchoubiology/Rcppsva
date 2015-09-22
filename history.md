@@ -26,4 +26,7 @@ Rcpp Integration Surrogate Variable Analysis and Rewrite by RcppEigen and RcppGS
 # Rcppsva 0.1.4
 + @Sep, 6.  fast hierachical clustering by rnn added. R-comapatible hclust object will return by `HClust` function
 + @Sep, 8.  Bugs fixed for `HClust`, which occurs when a lot of 0-distance node pairs exist.
++ @Sep, 15. Gap statistic added
++ @Sep, 17. Start rebuild Rcppdmr Package for our complete data
+
 

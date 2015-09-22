@@ -75,7 +75,8 @@ ComBat <- function(dat, batch, mod=NULL, par.prior=TRUE,prior.plots=FALSE) {
   }
   delta.hat <- NULL
   for (i in batches){
-    delta.hat <- rbind(delta.hat, na.omit(rowVars(s.data[,i])))
+    if(length(i) >= 2)
+      delta.hat <- rbind(delta.hat, na.omit(rowVars(s.data[,i])))
   }
 
   ##Find Priors
