@@ -75,7 +75,6 @@ ComBat <- function(dat, batch, mod=NULL, par.prior=TRUE,prior.plots=FALSE) {
   }
   delta.hat <- NULL
   for (i in batches){
-    if(length(i) >= 2)
       delta.hat <- rbind(delta.hat, na.omit(rowVars(s.data[,i])))
   }
 
@@ -112,21 +111,17 @@ ComBat <- function(dat, batch, mod=NULL, par.prior=TRUE,prior.plots=FALSE) {
   if(par.prior){
     cat("Finding parametric adjustments\n")
     for (i in 1:n.batch){
-      if(length(batches[[i]]) >= 2){
         temp <- it.sol(s.data[,batches[[i]]],gamma.hat[i,],
                        delta.hat[i,],gamma.bar[i],t2[i],a.prior[i],b.prior[i])
         gamma.star <- rbind(gamma.star,temp[1,])
         delta.star <- rbind(delta.star,temp[2,])
-      }
     }
-  }else{
+  } else{
     cat("Finding nonparametric adjustments\n")
     for (i in 1:n.batch){
-      if(length(batches[[i]]) >= 2){
         temp <- int.eprior(as.matrix(s.data[,batches[[i]]]),gamma.hat[i,],delta.hat[i,])
         gamma.star <- rbind(gamma.star,temp[1,])
         delta.star <- rbind(delta.star,temp[2,])
-      }
     }
   }
 
@@ -136,13 +131,9 @@ ComBat <- function(dat, batch, mod=NULL, par.prior=TRUE,prior.plots=FALSE) {
 
   bayesdata <- s.data
   j <- 1
-  k <- 1
   for (i in batches){
-    if(length(i) >= 2){
-      bayesdata[,i] <- (bayesdata[,i]-t(batch.design[i,]%*%gamma.star))/(sqrt(delta.star[j,])%*%t(rep(1,n.batches[k])))
-      j <- j + 1 
-    }
-    k <- k + 1
+    bayesdata[,i] <- (bayesdata[,i]-t(batch.design[i,]%*%gamma.star))/(sqrt(delta.star[j,])%*%t(rep(1,n.batches[j])))
+    j <- j + 1 
   }
 
   bayesdata <- (bayesdata*(sqrt(var.pooled)%*%t(rep(1,n.array))))+stand.mean
