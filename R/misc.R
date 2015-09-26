@@ -714,3 +714,169 @@ distributeRef <- function(data = NULL, size = 10, by = 'R', n = 1000,
                                    })
   NULL_dendrogram
 }
+
+#' utility R function; preProcess450K
+#' @title preProcess450K
+#' @description \code{process450K} is a function used for our methylation 450K raw data preprocessing.
+#' @param tcga.dir directionary of TCGA cancer level-1 data
+#' @param cancer     [ca]ncer [type] for TCGA retrieval
+#' @param methylate  [me]thylate data value type; 'Beta'(default) and 'M'
+#' @param verbose TRUE
+#' @return list
+#'         mset Methylated value matrix after ComBat process
+#'         pd   pdata for next analysis
+#' @importFrom minfi read.450k.sheet
+#' @importFrom minfi read.450k.exp
+#' @importFrom minfi pData
+#' @importFrom minfi preprocessIllumina
+#' @importFrom minfi preprocessSWAN
+#' @export
+preProcess450K <- function(tcga.dir = ".", cancer = "BRCA",
+                           methylate = c("Beta", "M"),
+                           verbose = TRUE) {
+  
+  # minfi sheet building
+  sdrf  <- list.files(tcga.dir, pattern = "*.sdrf")[1]
+  if (is.na(sdrf)) {
+    sdrf <- get450Kurl(type = cancer, save = tcga.dir)
+  }
+  pdata <- get450Ksheet(save = tcga.dir, sdrf = sdrf)
+  
+  # minfi data reading
+  ## read microarray data
+  if (verbose) {
+    cat("[Rcppdmr] minfi 450K reading ... \n")
+  }
+  targets <- read.450k.sheet(base = tcga.dir)
+  rgset   <- read.450k.exp(targets = targets)
+  
+  ## minfi phenotype data table
+  pd      <- pData(rgset)
+  
+  ## big data analysis protect
+  if(nrow(pd) > 100){
+    is.bigarray <- TRUE
+  } else {
+    is.bigarray <- FALSE
+  }
+  
+  ## normalization 485512 probes by control probes
+  ## control probes = 622399 - 485512 = 136887
+  ## 450K probes    = [type-I + type-II]
+  if (verbose) {
+    cat("[Rcppdmr] minfi background probes correction ... \n")
+  }
+  mset.norm <- preprocessIllumina(rgset, bg.correct = TRUE, normalize = "controls", reference = 1)
+  
+  ## type-I and type-II correction
+  if (verbose) {
+    cat("[Rcppdmr] minfi type-I & type-I bias correction ... \n")
+  }
+  mset.swan <- preprocessSWAN(rgset, mset.norm)
+  
+  ## garbage collection for large data analysis
+  if (verbose && is.bigarray) {
+    cat("[Rcppdmr] big data analysis optimization & garbage collection ... \n")
+  }
+  rm(rgset)
+  gc()
+  
+  ## ComBat process to remove batch effect
+  if (verbose) {
+    cat("[Rcppdmr] minfi remove batch effect ... \n")
+  }
+  
+  methylate <- match.arg(methylate)
+  if (methylate == "Beta") {
+    mdata <- getBeta(mset.swan, type = "Illumina")
+  } else {
+    mdata <- getM(mset.swan, type = "Beta", offset = 100, betaThreshold = 1e-6)
+  }
+  
+  if (verbose && is.bigarray) {
+    cat("[Rcppdmr] big data analysis optimization & garbage collection ... \n")
+  }
+  rm(mset.swan)
+  gc()
+  
+  #### phenotype data and design matrix
+  phenotype  <- factor(pd$status, levels = c("N", "C"))
+  mod.combat <- model.matrix( ~ phenotype + age, pd)
+  
+  ## ComBat-p & ComBat-n selection by par.prior
+  ## ComBat-p is selected as default for speed
+  mset.combat <- ComBat(dat = mdata, batch = pd$Slide, mod = mod, par.prior = TRUE)
+  
+  ## return paired data for analysis
+  zipped <- get450Kzip(pdata)
+  cols   <- paste(zipped[,6], zipped[,7], sep = "_")
+  mset   <- mset.combat[, cols, drop = FALSE]
+  
+  list(mset = mset, pd = zipped)
+}
+
+
+#' ultility R differential methylation positions 450K for M value data archive
+#' @title preProcessDMR
+#' @param data normalized methylation microarray value matrix (Beta, M)
+#' @param pdata phenotype data matrix
+#' @param svam  surrogate variable analysis method type
+#' @param lmfit linear regression analysis
+#' @param sampling sampling coefficient type; 'permutation'(default) and 'bootstrap'
+#' @param B sampling method's round; 30(default)
+#' @param verbose TRUE
+#' @return list
+#'         fit mset.fit matrix
+#'         bg  mset.bg list
+#'             coef each round's coeffcient
+#'             sigma
+#'             df.residuals
+#' @importFrom sva num.sv
+#' @importFrom sva sva
+#' @export
+preProcessDMR <- function(data = NULL, pdata = NULL,
+                          svam = c("isva", "sva"), lmfit = c("NULL", "limma"),
+                          sampling = c("permutation", "bootstrap"), B = 30,
+                          verbose = TRUE) {
+  options(warn = -1)
+  if (is.null(data) || is.null(pdata)) {
+    stop("normalized methylation matrix and phenotype matrix are needed ... ")
+  }
+  
+  mod <- model.matrix( ~ status + person + age, data = pdata)
+  # surrogate variable extract
+  if (verbose) {
+    cat("[Rcppdmr] surrogate variables matrix building ... \n")
+  }
+  svam <- match.arg(svam)
+  if (svam == "isva") {
+    mset.sv <- isvaFn(dat.m = data, design = mod, type = "M", verbose = TRUE)
+  } else {
+    mod0    <- model.matrix( ~ person + age, data = pdata)
+    n.sv    <- num.sv(dat = data, mod = mod, method = "leek")
+    mset.sv <- sva(dat = data, mod = mod, mod0 = mod0, n.sv = n.sv)
+  }
+  
+  # lm fit to test each probe's significance
+  lmfit <- match.arg(lmfit)
+  modsv <- cbind(mod, mset.sv$sv)
+  if (verbose) {
+    cat("[Rcppdmr] regression test for each probe's differential methylation ... \n")
+  }
+  mset.fit <- svaReg(dat.m = data, design = mod, sv.m = mset.sv$sv, qvalue0 = 0.1, backend = lmfit, verbose = TRUE)
+  
+  # null background distribution of coefficient B for status(C, N)
+  sampling <- match.arg(sampling)
+  if (verbose) {
+    cat("[Rcppdmr] sampling background distribution of coefficient by ", sampling, "\n")
+  }
+  if (sampling == "permutation") {
+    mset.bg <- mlm.fit(dat.m = data, design = modsv, coef = 2, B = B, full = TRUE)
+  } else {
+    mset.bg <- bootstrap.fit(dat.m = data, design = modsv, coef = 2, B = B)
+  }
+  
+  list(fit = mset.fit, bg = mset.bg)
+}
+
+

@@ -49,7 +49,9 @@ Imports:
     GenomicRanges, 
     IRanges, 
     data.table, 
-    RColorBrewer
+    RColorBrewer,
+    minfi,
+    sva
 Suggests: 
     pamr,
     bladderbatch,

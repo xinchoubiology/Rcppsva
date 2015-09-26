@@ -87,9 +87,9 @@ estDimRMT <- function(dat.m, plot = TRUE){
 #' @importFrom qvalue qvalue
 #' @importFrom fastICA fastICA
 #' @author Xin Zhou \url{xinchoubiology@@gmail.com}
-isvaFn <- function(dat.m = NULL, design = NULL, type = c("M", "beta"), qcutoff = 0.05, verbose = FALSE){
+isvaFn <- function(dat.m = NULL, design = NULL, type = c("M", "Beta"), qcutoff = 0.05, verbose = FALSE){
   type <- match.arg(type)
-  if(type == "beta"){
+  if(type == "Beta"){
     cat(sprintf("M values transform ...\n"))
     dat.m <- log2(dat.m / (1 - dat.m))
   }
@@ -99,7 +99,7 @@ isvaFn <- function(dat.m = NULL, design = NULL, type = c("M", "beta"), qcutoff =
   rmt.o <- estDimRMT(res.m, plot = FALSE);
   ncomp <- rmt.o$dim;
   cat(sprintf("rmt evaluated ISVs dimension is %d \n", ncomp));
-  
+
   if(ncomp == 0){
     return(list(n.isv = ncomp, isv = NULL))
   }
@@ -136,9 +136,9 @@ isvaFn <- function(dat.m = NULL, design = NULL, type = c("M", "beta"), qcutoff =
 }
 
 #' svaReg Do regression with selected surrogate variables
-#' 
+#'
 #' @title svaReg
-#' @description when we search all of the factors which means surrogate variables 
+#' @description when we search all of the factors which means surrogate variables
 #'              update our model.matrix and calculate moderate test
 #' @param dat.m n x m M|beta matrix for n CpG sites across m different patient samples.
 #' @param design phenotype of interested; m-length vector reresent patient samples' phenotype.
@@ -163,7 +163,7 @@ svaReg <- function(dat.m = NULL, design = NULL, sv.m = NULL, qvalue0 = 0.1, back
     modelSv <- model.matrix(~ -1 + design + sv.m)
     modelNull <- model.matrix(~ -1 + sv.m + design[,-2])
   }
-  
+
   if(backend == "NULL"){
     pval   <- pvalue(dat.m, modelSv, modelNull)
     pval.s <- sort(pval, decreasing = FALSE, index.return = TRUE)

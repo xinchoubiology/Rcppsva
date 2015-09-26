@@ -4,7 +4,7 @@
 \alias{isvaFn}
 \title{isvaFn}
 \usage{
-isvaFn(dat.m = NULL, design = NULL, type = c("M", "beta"),
+isvaFn(dat.m = NULL, design = NULL, type = c("M", "Beta"),
   qcutoff = 0.05, verbose = FALSE)
 }
 \arguments{
